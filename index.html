@@ -40,7 +40,7 @@ html{scroll-behavior:smooth}
 /* per-section bg canvas */
 .sec-bg{position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;opacity:0;transition:opacity 1.2s}
 .sec-bg.active{opacity:1}
-#hero,#about,#projects-wrap,#warmap,#conflicts,#stack,#contact{position:relative;overflow:hidden}
+#about,#projects-wrap,#warmap,#conflicts,#stack,#contact{position:relative;overflow:hidden}
 
 body{
   background:var(--ink);
@@ -92,7 +92,7 @@ body.hov #cring{width:52px;height:52px;border-color:rgba(192,57,43,.75)}
 #bgc{display:none}
 
 /* ── NAV ── */
-nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:26px 52px;pointer-events:none}
+nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:26px 52px}
 .n-logo{font-family:var(--serif);font-size:1.3rem;letter-spacing:.07em;color:var(--paper);text-decoration:none;mix-blend-mode:difference}
 .n-links{display:flex;gap:36px;list-style:none}
 .n-links a{font-family:var(--mono);font-size:.5rem;letter-spacing:.28em;text-transform:uppercase;color:rgba(238,234,224,.45);text-decoration:none;transition:color .3s}
@@ -100,7 +100,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:cen
 .n-scroll{font-family:var(--mono);font-size:.5rem;letter-spacing:.22em;color:rgba(238,234,224,.25)}
 
 /* ── HERO ── */
-#hero{position:relative;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 52px;z-index:1;overflow:hidden;text-align:center;background:#070c12}
+#hero{position:relative;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 52px;z-index:1;text-align:center;background:#070c12}
 .h-eye{font-family:var(--mono);font-size:.58rem;letter-spacing:.42em;text-transform:uppercase;color:var(--accent);margin-bottom:18px;opacity:0;animation:fi 1s 2s forwards}
 .h-title{font-family:var(--serif);font-size:clamp(4.5rem,14vw,16rem);line-height:.87;letter-spacing:-.01em;text-shadow:0 0 60px rgba(78,205,196,0.3),0 2px 20px rgba(0,0,0,0.8)}
 .h-title .row{overflow:hidden;display:block}
@@ -249,49 +249,44 @@ footer{position:relative;z-index:1;padding:28px 52px;border-top:1px solid rgba(2
 
 /* ── MENU BUTTON (3 dots) ── */
 .menu-btn{
-  position:relative;z-index:200;
+  position:fixed;
+  top:26px;left:52px;
+  z-index:10001;
   display:flex;flex-direction:column;align-items:center;justify-content:center;
   gap:5px;
   width:44px;height:44px;
-  border:1px solid rgba(238,234,224,0.15);
+  border:1px solid rgba(238,234,224,0.2);
   border-radius:50%;
-  cursor:none;
-  transition:border-color .3s, background .3s, transform .6s cubic-bezier(.16,1,.3,1),
-             opacity .5s ease, scale .5s cubic-bezier(.16,1,.3,1),
-             filter .5s ease, visibility .5s;
-  background:rgba(8,8,14,0.6);
-  backdrop-filter:blur(10px);
+  cursor:pointer;
+  background:rgba(8,8,14,0.9);
+  transition:border-color .3s, background .3s, transform .3s, opacity .5s, scale .5s;
 }
+.menu-btn:hover{
+  border-color:#00f5c4;
+  background:rgba(0,245,196,0.08);
+  transform:scale(1.1);
+}
+.menu-btn.open{
+  border-color:#00f5c4;
+  background:rgba(0,245,196,0.12);
+}
+.menu-btn.open .mb-dot:nth-child(1){transform:translateY(10px) rotate(45deg);background:#00f5c4}
+.menu-btn.open .mb-dot:nth-child(2){opacity:0;transform:scaleX(0)}
+.menu-btn.open .mb-dot:nth-child(3){transform:translateY(-10px) rotate(-45deg);background:#00f5c4}
 .menu-btn.vanished{
   opacity:0;
   scale:0.2;
-  filter:blur(8px) brightness(3);
   pointer-events:none;
   visibility:hidden;
 }
-.menu-btn:hover{
-  border-color:var(--accent);
-  background:rgba(0,245,196,0.06);
-  transform:scale(1.08);
-}
-.menu-btn.open{
-  border-color:var(--accent);
-  background:rgba(0,245,196,0.1);
-}
-.menu-btn.open .mb-dot:nth-child(1){transform:translateY(10px) rotate(45deg);background:var(--accent)}
-.menu-btn.open .mb-dot:nth-child(2){opacity:0;transform:scaleX(0)}
-.menu-btn.open .mb-dot:nth-child(3){transform:translateY(-10px) rotate(-45deg);background:var(--accent)}
-
 .mb-dot{
   width:5px;height:5px;
   border-radius:50%;
-  background:var(--paper);
+  background:#eeeae0;
   transition:transform .35s cubic-bezier(.16,1,.3,1), opacity .25s, background .25s;
   flex-shrink:0;
 }
-/* glow pulse on dots */
-.menu-btn:hover .mb-dot{background:var(--accent);box-shadow:0 0 6px var(--accent)}
-.menu-btn,.n-scroll{pointer-events:all}
+.menu-btn:hover .mb-dot{background:#00f5c4;}
 
 /* ── DROPDOWN ── */
 .menu-drop{
@@ -299,7 +294,8 @@ footer{position:relative;z-index:1;padding:28px 52px;border-top:1px solid rgba(2
   top:0;left:0;
   width:300px;
   height:100vh;
-  z-index:150;
+  z-index:10000;
+  contain:none;
   transform:translateX(-110%);
   transition:transform .5s cubic-bezier(.16,1,.3,1);
   pointer-events:none;
@@ -310,26 +306,30 @@ footer{position:relative;z-index:1;padding:28px 52px;border-top:1px solid rgba(2
 }
 .menu-drop-inner{
   height:100%;
-  background:rgba(4,6,10,0.97);
-  backdrop-filter:blur(20px);
-  border-right:1px solid rgba(0,245,196,0.12);
+  background:#04060a;
+  border-right:1px solid rgba(0,245,196,0.15);
   display:flex;
   flex-direction:column;
   justify-content:center;
   padding:60px 40px;
   gap:8px;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:geometricPrecision;
+  transform:translateZ(0);
 }
 .menu-drop-inner a{
   display:flex;
   align-items:center;
   gap:16px;
-  padding:16px 0;
-  border-bottom:1px solid rgba(238,234,224,0.05);
+  padding:18px 0;
+  border-bottom:1px solid rgba(238,234,224,0.06);
   text-decoration:none;
-  color:rgba(238,234,224,0.5);
+  color:rgba(238,234,224,0.85);
   transition:color .3s, padding-left .3s;
   position:relative;
-  overflow:hidden;
+  cursor:pointer;
+  -webkit-font-smoothing:antialiased;
+  will-change:color;
 }
 .menu-drop-inner a::before{
   content:'';
@@ -352,6 +352,8 @@ footer{position:relative;z-index:1;padding:28px 52px;border-top:1px solid rgba(2
   font-family:var(--serif);font-size:1.8rem;
   line-height:1;flex:1;
   letter-spacing:0.03em;
+  color:#eeeae0;
+  opacity:1;
 }
 .md-arr{
   font-size:1rem;opacity:0;
@@ -362,11 +364,11 @@ footer{position:relative;z-index:1;padding:28px 52px;border-top:1px solid rgba(2
 
 /* overlay backdrop */
 .menu-overlay{
-  position:fixed;inset:0;z-index:140;
-  background:rgba(0,0,0,0.5);
+  position:fixed;inset:0;
+  z-index:9999;
+  background:rgba(0,0,0,0.7);
   opacity:0;visibility:hidden;
   transition:opacity .4s,visibility .4s;
-  backdrop-filter:blur(2px);
 }
 .menu-overlay.open{opacity:1;visibility:visible}
 
@@ -386,8 +388,17 @@ footer{position:relative;z-index:1;padding:28px 52px;border-top:1px solid rgba(2
   <div class="ld-pct" id="lpct">0%</div>
 </div>
 
-<!-- 3D BG -->
+<!-- OVERLAYS -->
 <div class="menu-overlay" id="menuOverlay" onclick="closeMenu()"></div>
+<div class="menu-drop" id="menuDrop">
+  <div class="menu-drop-inner">
+    <a href="#about" onclick="closeMenu()"><span class="md-num">01</span><span class="md-label">About</span><span class="md-arr">↗</span></a>
+    <a href="#projects" onclick="closeMenu()"><span class="md-num">02</span><span class="md-label">Projects</span><span class="md-arr">↗</span></a>
+    <a href="#warmap" onclick="closeMenu()"><span class="md-num">03</span><span class="md-label">Conflict Map</span><span class="md-arr">↗</span></a>
+    <a href="#conflicts" onclick="closeMenu()"><span class="md-num">04</span><span class="md-label">Index</span><span class="md-arr">↗</span></a>
+    <a href="#contact" onclick="closeMenu()"><span class="md-num">05</span><span class="md-label">Contact</span><span class="md-arr">↗</span></a>
+  </div>
+</div>
 <div class="grid-overlay" id="grid-overlay"></div>
 <div class="noise-overlay"></div>
 <div class="scanlines"></div>
@@ -398,24 +409,11 @@ footer{position:relative;z-index:1;padding:28px 52px;border-top:1px solid rgba(2
 
 <!-- NAV -->
 <nav>
-  <!-- MENU BUTTON -->
   <div class="menu-btn" id="menuBtn" onclick="toggleMenu()">
     <span class="mb-dot"></span>
     <span class="mb-dot"></span>
     <span class="mb-dot"></span>
   </div>
-
-  <!-- DROPDOWN MENU -->
-  <div class="menu-drop" id="menuDrop">
-    <div class="menu-drop-inner">
-      <a href="#about"   onclick="closeMenu()"><span class="md-num">01</span><span class="md-label">About</span><span class="md-arr">↗</span></a>
-      <a href="#projects" onclick="closeMenu()"><span class="md-num">02</span><span class="md-label">Projects</span><span class="md-arr">↗</span></a>
-      <a href="#warmap"  onclick="closeMenu()"><span class="md-num">03</span><span class="md-label">Conflict Map</span><span class="md-arr">↗</span></a>
-      <a href="#conflicts" onclick="closeMenu()"><span class="md-num">04</span><span class="md-label">Index</span><span class="md-arr">↗</span></a>
-      <a href="#contact" onclick="closeMenu()"><span class="md-num">05</span><span class="md-label">Contact</span><span class="md-arr">↗</span></a>
-    </div>
-  </div>
-
   <div class="n-scroll" id="ns">000</div>
 </nav>
 
@@ -1737,12 +1735,13 @@ function toggleMenu(){
   const overlay=document.getElementById('menuOverlay');
   const isOpen=btn.classList.contains('open');
   if(isOpen){closeMenu()}
-  else{btn.classList.add('open');drop.classList.add('open');overlay.classList.add('open')}
+  else{btn.classList.add('open');drop.classList.add('open');overlay.classList.add('open');document.body.classList.add('menu-open')}
 }
 function closeMenu(){
   document.getElementById('menuBtn').classList.remove('open');
   document.getElementById('menuDrop').classList.remove('open');
   document.getElementById('menuOverlay').classList.remove('open');
+  document.body.classList.remove('menu-open');
 }
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeMenu()});
 
