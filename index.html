@@ -1,0 +1,1587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quantum Lab Builds — Experimental Digital Projects</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&family=Syncopate:wght@400;700&display=swap');
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+
+:root{
+  --ink:#08080e;
+  --deep:#0d0d1a;
+  --paper:#eeeae0;
+  --rust:#c0392b;
+  --amber:#e67e22;
+  --olive:#7d9464;
+  --blue:#2980b9;
+  --accent:#00f5c4;
+  --accent2:#ff3d6b;
+  --accent3:#7b61ff;
+  --serif:'Bebas Neue',sans-serif;
+  --mono:'Syncopate',sans-serif;
+  --body:'DM Sans',sans-serif;
+}
+
+/* ── DEVLAB-style overlays ── */
+.grid-overlay{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:linear-gradient(rgba(0,245,196,0.025) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,245,196,0.025) 1px,transparent 1px);
+  background-size:80px 80px;transition:opacity 1s}
+.noise-overlay{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.028;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size:200px 200px}
+.scanlines{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.035) 2px,rgba(0,0,0,0.035) 4px)}
+
+/* per-section bg canvas */
+.sec-bg{position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;opacity:0;transition:opacity 1.2s}
+.sec-bg.active{opacity:1}
+#hero,#about,#projects-wrap,#warmap,#conflicts,#stack,#contact{position:relative;overflow:hidden}
+
+body{
+  background:var(--ink);
+  color:var(--paper);
+  font-family:var(--body);
+  overflow-x:hidden;
+  cursor:none;
+}
+  50%{background:
+    radial-gradient(ellipse 55% 55% at 70% 30%, rgba(192,57,43,0.04) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 40% at 20% 70%, rgba(41,128,185,0.05) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 50% at 50% 50%, rgba(20,15,50,0.6) 0%, transparent 80%)
+  }
+  100%{background:
+    radial-gradient(ellipse 65% 45% at 60% 70%, rgba(192,57,43,0.04) 0%, transparent 70%),
+    radial-gradient(ellipse 45% 55% at 30% 20%, rgba(41,128,185,0.04) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 60% at 50% 50%, rgba(25,18,55,0.55) 0%, transparent 80%)
+  }
+}
+
+/* ── CURSOR ── */
+#cur{position:fixed;z-index:9999;pointer-events:none;left:0;top:0;width:0;height:0}
+#cdot{width:7px;height:7px;background:var(--paper);border-radius:50%;position:fixed;transform:translate(-50%,-50%);transition:width .18s,height .18s,background .2s;z-index:9999;pointer-events:none}
+#cring{width:34px;height:34px;border:1px solid rgba(238,234,224,.45);border-radius:50%;position:fixed;transform:translate(-50%,-50%);transition:width .28s,height .28s,border-color .25s;z-index:9998;pointer-events:none}
+body.hov #cdot{width:0;height:0;opacity:0}
+body.hov #cring{width:52px;height:52px;border-color:rgba(192,57,43,.75)}
+
+/* ── LOADER ── */
+#loader{position:fixed;inset:0;z-index:1000;background:var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;transition:opacity .9s,visibility .9s}
+#loader.gone{opacity:0;visibility:hidden;pointer-events:none}
+.ld-name{font-family:var(--serif);font-size:clamp(3.5rem,10vw,9rem);letter-spacing:.06em;line-height:1;display:flex}
+.ld-name span{display:inline-block;transform:translateY(100%);opacity:0;animation:su .55s cubic-bezier(.16,1,.3,1) forwards}
+.ld-name span:nth-child(1){animation-delay:.05s}.ld-name span:nth-child(2){animation-delay:.1s}
+.ld-name span:nth-child(3){animation-delay:.15s}.ld-name span:nth-child(4){animation-delay:.2s}
+.ld-name span:nth-child(5){animation-delay:.25s}.ld-name span:nth-child(6){animation-delay:.3s}
+.ld-name span:nth-child(7){animation-delay:.35s}.ld-name span:nth-child(8){animation-delay:.4s}
+.ld-name span:nth-child(9){animation-delay:.45s}.ld-name span:nth-child(10){animation-delay:.5s}
+.ld-name span:nth-child(11){animation-delay:.55s}.ld-name span:nth-child(12){animation-delay:.6s}
+.ld-name span:nth-child(13){animation-delay:.65s}.ld-name span:nth-child(14){animation-delay:.7s}
+.ld-name span:nth-child(15){animation-delay:.75s}.ld-name span:nth-child(16){animation-delay:.8s}
+.ld-sub{font-family:var(--mono);font-size:.55rem;letter-spacing:.35em;text-transform:uppercase;color:rgba(238,234,224,.3);opacity:0;animation:fi .6s .9s forwards}
+.ld-bar{width:220px;height:1px;background:rgba(238,234,224,.1)}
+.ld-fill{height:100%;background:var(--paper);width:0;transition:width .06s linear}
+.ld-pct{font-family:var(--mono);font-size:.6rem;letter-spacing:.3em;color:rgba(238,234,224,.25)}
+@keyframes su{to{transform:translateY(0);opacity:1}}
+@keyframes fi{to{opacity:1}}
+
+/* ── BG CANVAS (3D globe) ── */
+#bgc{display:none}
+
+/* ── NAV ── */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:26px 52px}
+.n-logo{font-family:var(--serif);font-size:1.3rem;letter-spacing:.07em;color:var(--paper);text-decoration:none;mix-blend-mode:difference}
+.n-links{display:flex;gap:36px;list-style:none}
+.n-links a{font-family:var(--mono);font-size:.5rem;letter-spacing:.28em;text-transform:uppercase;color:rgba(238,234,224,.45);text-decoration:none;transition:color .3s}
+.n-links a:hover{color:var(--paper)}
+.n-scroll{font-family:var(--mono);font-size:.5rem;letter-spacing:.22em;color:rgba(238,234,224,.25)}
+
+/* ── HERO ── */
+#hero{position:relative;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 52px;z-index:1;overflow:hidden;text-align:center;background:#070c12}
+.h-eye{font-family:var(--mono);font-size:.58rem;letter-spacing:.42em;text-transform:uppercase;color:var(--accent);margin-bottom:18px;opacity:0;animation:fi 1s 2s forwards}
+.h-title{font-family:var(--serif);font-size:clamp(4.5rem,14vw,16rem);line-height:.87;letter-spacing:-.01em;text-shadow:0 0 60px rgba(78,205,196,0.3),0 2px 20px rgba(0,0,0,0.8)}
+.h-title .row{overflow:hidden;display:block}
+.h-title .row span{display:inline-block;transform:translateY(112%);animation:su .9s cubic-bezier(.16,1,.3,1) forwards}
+.h-title .row:nth-child(1) span{animation-delay:1.3s}
+.h-title .row:nth-child(2) span{animation-delay:1.45s;color:transparent;-webkit-text-stroke:1px rgba(238,234,224,.22)}
+.h-title .row:nth-child(3) span{animation-delay:1.6s}
+.h-bot{display:flex;align-items:center;justify-content:center;gap:48px;margin-top:30px;opacity:0;animation:fi 1s 2.1s forwards;flex-wrap:wrap}
+.h-desc{max-width:380px;font-size:.9rem;line-height:1.75;color:rgba(238,234,224,.45);font-weight:300;text-align:left}
+.h-desc strong{color:var(--paper);font-weight:500}
+.h-scroll{display:flex;flex-direction:column;align-items:center;gap:10px;font-family:var(--mono);font-size:.5rem;letter-spacing:.3em;text-transform:uppercase;color:rgba(238,234,224,.25)}
+.h-line{width:1px;height:48px;background:linear-gradient(to bottom,rgba(238,234,224,.4),transparent);animation:pl 2s infinite}
+@keyframes pl{0%,100%{transform:scaleY(1);opacity:.4}50%{transform:scaleY(.6);opacity:.8}}
+
+/* ── MARQUEE ── */
+.mq{position:relative;z-index:1;border-top:1px solid rgba(238,234,224,.07);border-bottom:1px solid rgba(238,234,224,.07);padding:16px 0;overflow:hidden;background:rgba(8,8,14,.7);backdrop-filter:blur(8px)}
+.mq-inner{display:flex;animation:mar 28s linear infinite;white-space:nowrap}
+.mq-item{display:inline-flex;align-items:center;gap:22px;padding:0 30px;font-family:var(--mono);font-size:.55rem;letter-spacing:.28em;text-transform:uppercase;color:rgba(238,234,224,.22);flex-shrink:0}
+.mq-dot{width:4px;height:4px;background:var(--rust);border-radius:50%;flex-shrink:0}
+@keyframes mar{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+/* ── COMMON ── */
+.sec{position:relative;z-index:1;padding:130px 52px;max-width:1440px;margin:0 auto}
+.s-lbl{font-family:var(--mono);font-size:.5rem;letter-spacing:.38em;text-transform:uppercase;color:var(--rust);margin-bottom:14px;display:flex;align-items:center;gap:14px}
+.s-lbl::before{content:'';width:22px;height:1px;background:var(--rust)}
+
+/* ── ABOUT ── */
+.ab-grid{display:grid;grid-template-columns:1fr 1fr;gap:90px;align-items:start;margin-top:56px}
+.ab-h{font-family:var(--serif);font-size:clamp(3rem,6.5vw,6.5rem);line-height:.92}
+.ab-h em{color:transparent;-webkit-text-stroke:1px rgba(238,234,224,.18);font-style:normal}
+.ab-r{padding-top:16px}
+.ab-p{font-size:.95rem;line-height:1.9;color:rgba(238,234,224,.5);font-weight:300;margin-bottom:22px}
+.ab-p strong{color:var(--paper);font-weight:500}
+.ab-tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:36px}
+.atag{font-family:var(--mono);font-size:.5rem;letter-spacing:.2em;text-transform:uppercase;padding:7px 14px;border:1px solid rgba(238,234,224,.1);color:rgba(238,234,224,.35);transition:all .3s}
+.atag:hover{border-color:var(--rust);color:var(--rust)}
+
+/* ── PROJECTS ── */
+.pj-list{margin-top:56px}
+.pj-row{border-top:1px solid rgba(238,234,224,.07);display:grid;grid-template-columns:72px 1fr auto;align-items:center;gap:36px;padding:34px 0;cursor:none;position:relative;transition:padding-left .4s}
+.pj-row::after{content:'';position:absolute;inset:0;background:rgba(192,57,43,.035);opacity:0;transition:opacity .3s}
+.pj-row:hover::after{opacity:1}
+.pj-row:hover{padding-left:18px}
+.pj-num{font-family:var(--mono);font-size:.55rem;letter-spacing:.2em;color:rgba(238,234,224,.18)}
+.pj-name{font-family:var(--serif);font-size:clamp(1.7rem,3.8vw,3.4rem);line-height:1;transition:color .3s}
+.pj-row:hover .pj-name{color:var(--rust)}
+.pj-sub{font-family:var(--mono);font-size:.5rem;letter-spacing:.18em;text-transform:uppercase;color:rgba(238,234,224,.22);margin-top:5px}
+.pj-rt{display:flex;align-items:center;gap:18px}
+.pj-st{font-family:var(--mono);font-size:.48rem;letter-spacing:.18em;text-transform:uppercase;padding:5px 11px;border:1px solid}
+.pj-st.live{border-color:rgba(125,148,100,.5);color:var(--olive)}
+.pj-st.dev{border-color:rgba(192,57,43,.4);color:var(--rust)}
+.pj-st.concept{border-color:rgba(238,234,224,.12);color:rgba(238,234,224,.22)}
+.pj-arrow{font-size:1.15rem;color:rgba(238,234,224,.13);transition:all .3s;transform:rotate(-45deg)}
+.pj-row:hover .pj-arrow{color:var(--rust);transform:rotate(0)}
+
+/* hover preview */
+.pj-preview{position:fixed;width:310px;height:210px;pointer-events:none;z-index:200;opacity:0;transition:opacity .25s;overflow:hidden;border-radius:4px}
+
+/* ── WAR MAP ── */
+#warmap{position:relative;z-index:1;padding-bottom:130px}
+.wm-head{padding:0 52px;max-width:1440px;margin:0 auto 36px}
+.wm-wrap{position:relative;margin:0 52px;overflow:hidden;border:1px solid rgba(238,234,224,.07)}
+#wmc{width:100%;height:620px;display:block;background:#04040c}
+
+/* map overlays */
+.wm-legend{position:absolute;bottom:48px;left:26px;display:flex;flex-direction:column;gap:9px;background:rgba(4,4,12,.85);padding:16px 18px;border:1px solid rgba(238,234,224,.06)}
+.wl-row{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:.46rem;letter-spacing:.2em;text-transform:uppercase;color:rgba(238,234,224,.4)}
+.wl-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+
+.wm-stats{position:absolute;top:24px;right:24px;background:rgba(4,4,12,.9);border:1px solid rgba(238,234,224,.06);padding:18px 22px;min-width:170px}
+.ws-item{margin-bottom:14px}
+.ws-item:last-child{margin-bottom:0}
+.ws-label{font-family:var(--mono);font-size:.44rem;letter-spacing:.24em;text-transform:uppercase;color:rgba(238,234,224,.22);margin-bottom:3px}
+.ws-val{font-family:var(--serif);font-size:1.7rem;line-height:1;color:var(--paper)}
+
+.wm-ticker{position:absolute;bottom:0;left:0;right:0;background:rgba(192,57,43,.88);padding:7px 26px;overflow:hidden;white-space:nowrap}
+.wt-inner{display:inline-block;font-family:var(--mono);font-size:.46rem;letter-spacing:.2em;text-transform:uppercase;animation:tck 55s linear infinite}
+@keyframes tck{from{transform:translateX(100vw)}to{transform:translateX(-100%)}}
+
+/* ── CONFLICT INDEX ── */
+#conflicts{padding-top:0}
+.ci-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;margin-top:56px}
+.cc{background:rgba(238,234,224,.018);border:1px solid rgba(238,234,224,.05);padding:28px;position:relative;overflow:hidden;transition:background .3s,border-color .3s;cursor:none}
+.cc:hover{background:rgba(192,57,43,.045);border-color:rgba(192,57,43,.18)}
+.cc::before{content:'';position:absolute;top:0;left:0;width:3px;height:0;transition:height .4s}
+.cc:hover::before{height:100%}
+.cc.war::before{background:var(--rust)}
+.cc.tension::before{background:var(--amber)}
+.cc.historic::before{background:var(--olive)}
+.cc-badge{font-family:var(--mono);font-size:.44rem;letter-spacing:.22em;text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:7px;color:rgba(238,234,224,.28)}
+.cc-bdot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.war .cc-bdot{background:var(--rust);box-shadow:0 0 6px var(--rust)}
+.tension .cc-bdot{background:var(--amber)}
+.historic .cc-bdot{background:var(--olive);opacity:.6}
+.cc-name{font-family:var(--serif);font-size:1.5rem;line-height:1;margin-bottom:6px}
+.war .cc-name{color:var(--paper)}
+.tension .cc-name{color:rgba(238,234,224,.78)}
+.historic .cc-name{color:rgba(238,234,224,.38)}
+.cc-loc{font-size:.78rem;color:rgba(238,234,224,.28);font-weight:300;margin-bottom:13px;font-style:italic}
+.cc-desc{font-size:.78rem;line-height:1.68;color:rgba(238,234,224,.32);font-weight:300}
+.cc-yr{position:absolute;bottom:20px;right:20px;font-family:var(--serif);font-size:2.8rem;color:rgba(238,234,224,.035);pointer-events:none;line-height:1}
+
+/* ── STACK ── */
+#stack{position:relative;z-index:1;padding:130px 0;border-top:1px solid rgba(238,234,224,.05);overflow:hidden}
+.stk-head{padding:0 52px;max-width:1440px;margin:0 auto 56px}
+.stk-row{display:flex;border-top:1px solid rgba(238,234,224,.04);border-bottom:1px solid rgba(238,234,224,.04);overflow:hidden;padding:18px 0;margin-bottom:3px}
+.sm{display:flex;animation:mar 22s linear infinite;white-space:nowrap;flex-shrink:0}
+.sm.rev{animation-direction:reverse}
+.st{display:inline-flex;align-items:center;gap:14px;padding:7px 38px;font-family:var(--serif);font-size:1.7rem;color:rgba(238,234,224,.07);flex-shrink:0;transition:color .3s;border-right:1px solid rgba(238,234,224,.04)}
+.st:hover{color:rgba(238,234,224,.45)}
+
+/* ── CONTACT ── */
+#contact{position:relative;z-index:1;padding:130px 52px 90px;max-width:1440px;margin:0 auto}
+.ct-grid{display:grid;grid-template-columns:1fr 1fr;gap:100px;align-items:center}
+.ct-h{font-family:var(--serif);font-size:clamp(3.5rem,9vw,10rem);line-height:.87;letter-spacing:.02em;margin-top:18px}
+.ct-h .ghost{color:transparent;-webkit-text-stroke:1px rgba(238,234,224,.14);display:block}
+.ct-links{display:flex;flex-direction:column;gap:14px}
+.ct-a{display:flex;align-items:center;justify-content:space-between;padding:19px 22px;border:1px solid rgba(238,234,224,.07);text-decoration:none;color:var(--paper);position:relative;overflow:hidden;transition:color .3s}
+.ct-a::before{content:'';position:absolute;inset:0;background:var(--rust);transform:translateX(-101%);transition:transform .38s cubic-bezier(.16,1,.3,1)}
+.ct-a:hover::before{transform:translateX(0)}
+.ct-a span{position:relative;z-index:1}
+.ct-at{font-family:var(--mono);font-size:.55rem;letter-spacing:.22em;text-transform:uppercase}
+.ct-arr{font-size:1.1rem;transition:transform .3s}
+.ct-a:hover .ct-arr{transform:translateX(4px)}
+
+footer{position:relative;z-index:1;padding:28px 52px;border-top:1px solid rgba(238,234,224,.05);display:flex;justify-content:space-between;align-items:center}
+.f-l{font-family:var(--serif);font-size:.95rem;letter-spacing:.05em;color:rgba(238,234,224,.25)}
+.f-r{font-family:var(--mono);font-size:.46rem;letter-spacing:.2em;color:rgba(238,234,224,.18)}
+
+/* ── REVEAL ── */
+.r{opacity:0;transform:translateY(44px);transition:opacity .8s,transform .8s}
+.r.vis{opacity:1;transform:none}
+.d1{transition-delay:.1s}.d2{transition-delay:.2s}.d3{transition-delay:.3s}
+
+@media(max-width:860px){
+  nav,.wm-head{padding:20px 22px}
+  .n-links{display:none}
+  #hero,.sec,#contact{padding:90px 22px 70px}
+  .h-title{font-size:clamp(3.8rem,13vw,6rem)}
+  .ab-grid,.ct-grid{grid-template-columns:1fr;gap:44px}
+  .ci-grid{grid-template-columns:1fr}
+  .wm-wrap{margin:0 22px}
+  footer{flex-direction:column;gap:14px;padding:22px}
+  .pj-row{grid-template-columns:44px 1fr auto;gap:12px}
+}
+</style>
+</head>
+<body>
+
+<!-- LOADER -->
+<div id="loader">
+  <div class="ld-name">
+    <span>Q</span><span>U</span><span>A</span><span>N</span><span>T</span><span>U</span><span>M</span>
+    <span>&nbsp;</span>
+    <span>L</span><span>A</span><span>B</span>
+  </div>
+  <div class="ld-sub">Experimental Digital Builds</div>
+  <div class="ld-bar"><div class="ld-fill" id="lf"></div></div>
+  <div class="ld-pct" id="lpct">0%</div>
+</div>
+
+<!-- 3D BG -->
+<div class="grid-overlay" id="grid-overlay"></div>
+<div class="noise-overlay"></div>
+<div class="scanlines"></div>
+<canvas id="bgc"></canvas>
+
+<!-- CURSOR -->
+<div id="cur"><div id="cdot"></div><div id="cring"></div></div>
+
+<!-- NAV -->
+<nav>
+  
+  <ul class="n-links">
+    <li><a href="#about">About</a></li>
+    <li><a href="#projects">Projects</a></li>
+    <li><a href="#warmap">Conflict Map</a></li>
+    <li><a href="#conflicts">Index</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+  <div class="n-scroll" id="ns">000</div>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <canvas id="hero3d" style="position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;opacity:1;display:block"></canvas>
+  <div style="position:relative;z-index:2"><div class="h-eye">Experimental Digital Lab &nbsp;·&nbsp; Est. 2025</div>
+  <h1 class="h-title">
+    <span class="row"><span>QUANTUM</span></span>
+    <span class="row"><span>LAB</span></span>
+    <span class="row"><span>BUILDS</span></span>
+  </h1>
+  <div class="h-bot">
+    <p class="h-desc"><strong>Projects, apps and experiments</strong> that push the edge of what is possible. From real-time global conflict intelligence to unconventional software — everything is built here first.</p>
+    <div class="h-scroll"><span>Scroll</span><div class="h-line"></div></div>
+  </div></div>
+</section>
+
+<!-- MARQUEE -->
+<div class="mq">
+  <div class="mq-inner">
+    <span class="mq-item"><span class="mq-dot"></span>Experimental Projects</span>
+    <span class="mq-item"><span class="mq-dot"></span>Digital Builds</span>
+    <span class="mq-item"><span class="mq-dot"></span>Global Conflict Intelligence</span>
+    <span class="mq-item"><span class="mq-dot"></span>Apps and Tools</span>
+    <span class="mq-item"><span class="mq-dot"></span>Open Lab</span>
+    <span class="mq-item"><span class="mq-dot"></span>Always Building</span>
+    <span class="mq-item"><span class="mq-dot"></span>Quantum Lab Builds</span>
+    <span class="mq-item"><span class="mq-dot"></span>Experimental Projects</span>
+    <span class="mq-item"><span class="mq-dot"></span>Digital Builds</span>
+    <span class="mq-item"><span class="mq-dot"></span>Global Conflict Intelligence</span>
+    <span class="mq-item"><span class="mq-dot"></span>Apps and Tools</span>
+    <span class="mq-item"><span class="mq-dot"></span>Open Lab</span>
+    <span class="mq-item"><span class="mq-dot"></span>Always Building</span>
+    <span class="mq-item"><span class="mq-dot"></span>Quantum Lab Builds</span>
+  </div>
+</div>
+
+<!-- ABOUT -->
+<section class="sec r" id="about">
+  <canvas id="bg-about" class="sec-bg"></canvas>
+  <div class="s-lbl">01 — About the Lab</div>
+  <div class="ab-grid">
+    <div><h2 class="ab-h r">This is<br>the <em>Lab</em><br>Floor</h2></div>
+    <div class="ab-r r d1">
+      <p class="ab-p"><strong>Quantum Lab Builds</strong> is a personal experimental space for building things that do not exist yet. Every project starts as a question nobody is asking — and ends as something real.</p>
+      <p class="ab-p">From <strong>real-time global conflict tracking</strong> to unconventional software architectures, the lab operates at the intersection of technology, curiosity, and a refusal to do things the boring way.</p>
+      <p class="ab-p">Nothing here is finished. Everything here is alive.</p>
+      <div class="ab-tags">
+        <span class="atag">Full-Stack Dev</span>
+        <span class="atag">Network Systems</span>
+        <span class="atag">Mobile Apps</span>
+        <span class="atag">Data Visualization</span>
+        <span class="atag">Real-Time Systems</span>
+        <span class="atag">Security Research</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROJECTS -->
+<section class="sec r" id="projects" style="padding-top:0">
+  <canvas id="bg-projects" class="sec-bg"></canvas>
+  <div class="s-lbl">02 — Projects</div>
+  <div class="pj-list">
+    <div class="pj-row r" data-scene="globe">
+      <div class="pj-num">001</div>
+      <div><div class="pj-name">CONFLICT ATLAS</div><div class="pj-sub">Real-time global war and conflict tracker &nbsp;·&nbsp; WebGL &nbsp;·&nbsp; GeoData</div></div>
+      <div class="pj-rt"><span class="pj-st live">Live</span><span class="pj-arrow">↗</span></div>
+    </div>
+    <div class="pj-row r d1" data-scene="torus">
+      <div class="pj-num">002</div>
+      <div><div class="pj-name">SIGNAL ZERO</div><div class="pj-sub">Offline mesh messaging experiment &nbsp;·&nbsp; Android &nbsp;·&nbsp; Protocol Design</div></div>
+      <div class="pj-rt"><span class="pj-st dev">In Dev</span><span class="pj-arrow">↗</span></div>
+    </div>
+    <div class="pj-row r d2" data-scene="grid">
+      <div class="pj-num">003</div>
+      <div><div class="pj-name">PACKET CORE</div><div class="pj-sub">Low-level network analysis toolkit &nbsp;·&nbsp; Python &nbsp;·&nbsp; C &nbsp;·&nbsp; Scapy</div></div>
+      <div class="pj-rt"><span class="pj-st dev">Testing</span><span class="pj-arrow">↗</span></div>
+    </div>
+    <div class="pj-row r d3" data-scene="neural">
+      <div class="pj-num">004</div>
+      <div><div class="pj-name">NEURAL WATCH</div><div class="pj-sub">AI anomaly detection engine &nbsp;·&nbsp; TensorFlow &nbsp;·&nbsp; FastAPI</div></div>
+      <div class="pj-rt"><span class="pj-st concept">Concept</span><span class="pj-arrow">↗</span></div>
+    </div>
+    <div class="pj-row r" data-scene="rings">
+      <div class="pj-num">005</div>
+      <div><div class="pj-name">DARKBOARD</div><div class="pj-sub">Unified developer monitoring dashboard &nbsp;·&nbsp; React &nbsp;·&nbsp; Electron</div></div>
+      <div class="pj-rt"><span class="pj-st live">Beta</span><span class="pj-arrow">↗</span></div>
+    </div>
+  </div>
+  <div class="pj-preview" id="pprev"><canvas id="ppc" width="310" height="210" style="display:block;background:transparent"></canvas></div>
+</section>
+
+<!-- WAR MAP — Radware-style with visible world map -->
+<section id="warmap">
+  <canvas id="bg-warmap-sec" class="sec-bg"></canvas>
+  <div class="wm-head r">
+    <div class="s-lbl">03 — Live Conflict Intelligence</div>
+    <h2 style="font-family:var(--serif);font-size:clamp(2.4rem,5.5vw,5.5rem);line-height:.92;margin-top:14px">WORLD<br><span style="color:transparent;-webkit-text-stroke:1px rgba(238,234,224,.2)">CONFLICT</span><br>MAP</h2>
+    <p style="font-size:.84rem;color:rgba(238,234,224,.32);max-width:480px;margin-top:14px;line-height:1.75;font-weight:300">Active wars, armed conflicts, political tensions, and historical flashpoints. A living intelligence layer across the globe.</p>
+  </div>
+  <div class="wm-wrap r d1">
+    <canvas id="wmc"></canvas>
+    <div class="wm-legend">
+      <div class="wl-row"><span class="wl-dot" style="background:#c0392b;box-shadow:0 0 5px #c0392b"></span>Active War</div>
+      <div class="wl-row"><span class="wl-dot" style="background:#e67e22"></span>Political Tension</div>
+      <div class="wl-row"><span class="wl-dot" style="background:#7d9464;opacity:.7"></span>Historical Conflict</div>
+      <div class="wl-row"><span class="wl-dot" style="background:#2980b9"></span>Strike Arc</div>
+    </div>
+    <div class="wm-stats">
+      <div class="ws-item"><div class="ws-label">Active Conflicts</div><div class="ws-val" id="ws-a">42</div></div>
+      <div class="ws-item"><div class="ws-label">Tension Zones</div><div class="ws-val" id="ws-t">28</div></div>
+      <div class="ws-item"><div class="ws-label">Countries Affected</div><div class="ws-val" id="ws-c">67</div></div>
+    </div>
+    <div class="wm-ticker">
+      <span class="wt-inner">
+        ⚡ UKRAINE — Artillery exchanges in Kherson region &nbsp;·&nbsp;
+        ⚡ GAZA — Continued operations in Gaza Strip &nbsp;·&nbsp;
+        ⚡ SUDAN — SAF vs RSF fighting across Khartoum &nbsp;·&nbsp;
+        ⚡ MYANMAR — Resistance forces advance in Shan State &nbsp;·&nbsp;
+        ⚡ SAHEL — Armed groups active across Mali and Burkina Faso &nbsp;·&nbsp;
+        ⚡ SOUTH CHINA SEA — Naval standoff at Second Thomas Shoal &nbsp;·&nbsp;
+        ⚡ DRC — M23 offensive resumes in North Kivu &nbsp;·&nbsp;
+        ⚡ IRAN — Escalation across Middle East proxy zones &nbsp;·&nbsp;
+        ⚡ ETHIOPIA — Amhara conflict ongoing &nbsp;·&nbsp;
+        ⚡ HAITI — Gang control expands in Port-au-Prince &nbsp;·&nbsp;
+      </span>
+    </div>
+  </div>
+</section>
+
+<!-- CONFLICT INDEX — sorted by start year oldest→newest -->
+<section class="sec r" id="conflicts" style="padding-top:80px">
+  <canvas id="bg-conflicts-sec" class="sec-bg"></canvas>
+  <div class="s-lbl">04 — Conflict Index &nbsp;<span style="font-size:.42rem;color:rgba(238,234,224,.22);letter-spacing:.15em">sorted by date</span></div>
+  <div class="ci-grid">
+
+    <!-- 1950 -->
+    <div class="cc historic r">
+      <div class="cc-badge"><span class="cc-bdot"></span>Historical · Armistice 1953</div>
+      <div class="cc-name">KOREA DMZ</div>
+      <div class="cc-loc">East Asia &nbsp;·&nbsp; Since 1950</div>
+      <div class="cc-desc">Armistice since 1953 but no formal peace treaty. North Korea's nuclear and missile programs keep the peninsula on permanent high alert. One of the world's most fortified borders.</div>
+      <div class="cc-yr">1950</div>
+    </div>
+
+    <!-- 2003 -->
+    <div class="cc war r d1">
+      <div class="cc-badge"><span class="cc-bdot"></span>Active Conflict · 2003–Present</div>
+      <div class="cc-name">DRC CONFLICT</div>
+      <div class="cc-loc">Central Africa &nbsp;·&nbsp; Since 2003</div>
+      <div class="cc-desc">Multi-faction war in eastern DRC. M23 rebel group controls significant North Kivu territory. Over 7 million people internally displaced.</div>
+      <div class="cc-yr">2003</div>
+    </div>
+
+    <!-- 2011 -->
+    <div class="cc war r d2">
+      <div class="cc-badge"><span class="cc-bdot"></span>Active War · 2011–Present</div>
+      <div class="cc-name">YEMEN WAR</div>
+      <div class="cc-loc">Middle East &nbsp;·&nbsp; Since 2011</div>
+      <div class="cc-desc">Civil war turned regional proxy conflict. Saudi-led coalition vs Houthi forces backed by Iran. Humanitarian crisis ranked among the worst in the world.</div>
+      <div class="cc-yr">2011</div>
+    </div>
+
+    <!-- 2014 -->
+    <div class="cc war r">
+      <div class="cc-badge"><span class="cc-bdot"></span>Active War · 2014–Present</div>
+      <div class="cc-name">DONBAS CONFLICT</div>
+      <div class="cc-loc">Eastern Europe &nbsp;·&nbsp; Since 2014</div>
+      <div class="cc-desc">Armed conflict in eastern Ukraine began following Russian annexation of Crimea. Escalated into full-scale invasion in February 2022.</div>
+      <div class="cc-yr">2014</div>
+    </div>
+
+    <!-- 2015 -->
+    <div class="cc war r d1">
+      <div class="cc-badge"><span class="cc-bdot"></span>Active War · 2015–Present</div>
+      <div class="cc-name">SAHEL INSURGENCY</div>
+      <div class="cc-loc">West Africa &nbsp;·&nbsp; Since 2015</div>
+      <div class="cc-desc">Al-Qaeda and IS-linked jihadist insurgencies across Mali, Burkina Faso, and Niger. French forces withdrew; Russian Wagner group subsequently moved in.</div>
+      <div class="cc-yr">2015</div>
+    </div>
+
+    <!-- 2021 -->
+    <div class="cc war r d2">
+      <div class="cc-badge"><span class="cc-bdot"></span>Active War · 2021–Present</div>
+      <div class="cc-name">MYANMAR CIVIL WAR</div>
+      <div class="cc-loc">Southeast Asia &nbsp;·&nbsp; Since 2021</div>
+      <div class="cc-desc">Armed resistance against the military junta following the 2021 coup. Multiple resistance groups have seized significant territory from the Tatmadaw across several states.</div>
+      <div class="cc-yr">2021</div>
+    </div>
+
+    <!-- 2022 -->
+    <div class="cc war r">
+      <div class="cc-badge"><span class="cc-bdot"></span>Active War · 2022–Present</div>
+      <div class="cc-name">RUSSIA–UKRAINE</div>
+      <div class="cc-loc">Eastern Europe &nbsp;·&nbsp; Since 2022</div>
+      <div class="cc-desc">Full-scale Russian invasion since February 2022. Frontline fighting across Zaporizhzhia, Kherson, Kharkiv, and Donbas. The largest land war in Europe since World War II.</div>
+      <div class="cc-yr">2022</div>
+    </div>
+
+    <!-- 2023 -->
+    <div class="cc war r d1">
+      <div class="cc-badge"><span class="cc-bdot"></span>Active War · 2023–Present</div>
+      <div class="cc-name">ISRAEL–GAZA</div>
+      <div class="cc-loc">Middle East &nbsp;·&nbsp; Since 2023</div>
+      <div class="cc-desc">Military campaign following the Hamas attack on October 7, 2023. Intensive ground and air operations in the Gaza Strip with major humanitarian impact across the region.</div>
+      <div class="cc-yr">2023</div>
+    </div>
+
+    <!-- 2023 -->
+    <div class="cc war r d2">
+      <div class="cc-badge"><span class="cc-bdot"></span>Active War · 2023–Present</div>
+      <div class="cc-name">SUDAN CIVIL WAR</div>
+      <div class="cc-loc">Northeast Africa &nbsp;·&nbsp; Since 2023</div>
+      <div class="cc-desc">Armed conflict between SAF and RSF paramilitary forces across Khartoum, Darfur, and Kordofan — triggering the world's largest displacement crisis.</div>
+      <div class="cc-yr">2023</div>
+    </div>
+
+    <!-- Tensions -->
+    <div class="cc tension r">
+      <div class="cc-badge"><span class="cc-bdot"></span>Tension · Escalating 2024</div>
+      <div class="cc-name">SOUTH CHINA SEA</div>
+      <div class="cc-loc">Asia-Pacific &nbsp;·&nbsp; Escalating 2024</div>
+      <div class="cc-desc">Naval confrontations between China and the Philippines at Second Thomas Shoal. US military backing increases the risk of wider regional escalation.</div>
+      <div class="cc-yr">2024</div>
+    </div>
+
+    <div class="cc tension r d1">
+      <div class="cc-badge"><span class="cc-bdot"></span>Tension · High Alert 2024</div>
+      <div class="cc-name">IRAN vs ISRAEL</div>
+      <div class="cc-loc">Middle East &nbsp;·&nbsp; Escalating 2024</div>
+      <div class="cc-desc">Direct ballistic missile and drone exchanges in 2024 marked unprecedented escalation. Shadow war spanning Lebanon, Syria, and Yemen proxy zones.</div>
+      <div class="cc-yr">2024</div>
+    </div>
+
+    <div class="cc tension r d2">
+      <div class="cc-badge"><span class="cc-bdot"></span>Tension · Ongoing</div>
+      <div class="cc-name">KASHMIR DISPUTE</div>
+      <div class="cc-loc">South Asia &nbsp;·&nbsp; Ongoing</div>
+      <div class="cc-desc">Long-standing territorial dispute between India and Pakistan over the Kashmir region. Cross-border skirmishes and militant activity remain a persistent flashpoint.</div>
+      <div class="cc-yr">1947</div>
+    </div>
+
+  </div>
+</section>
+
+<!-- STACK -->
+<section id="stack">
+  <canvas id="bg-stack-sec" class="sec-bg"></canvas>
+  <div class="stk-head r">
+    <div class="s-lbl">05 — Tech Stack</div>
+    <h2 style="font-family:var(--serif);font-size:clamp(2.8rem,7.5vw,7.5rem);line-height:.87;margin-top:14px">TOOLS<br><span style="color:transparent;-webkit-text-stroke:1px rgba(238,234,224,.18)">OF THE</span><br>LAB</h2>
+  </div>
+  <div class="stk-row">
+    <div class="sm">
+      <span class="st">⚛️&nbsp;React</span><span class="st">🌐&nbsp;Three.js</span><span class="st">🟨&nbsp;JavaScript</span>
+      <span class="st">🔵&nbsp;TypeScript</span><span class="st">🐍&nbsp;Python</span><span class="st">🦀&nbsp;Rust</span>
+      <span class="st">⚛️&nbsp;React</span><span class="st">🌐&nbsp;Three.js</span><span class="st">🟨&nbsp;JavaScript</span>
+      <span class="st">🔵&nbsp;TypeScript</span><span class="st">🐍&nbsp;Python</span><span class="st">🦀&nbsp;Rust</span>
+    </div>
+  </div>
+  <div class="stk-row" style="margin-top:3px">
+    <div class="sm rev">
+      <span class="st">🐳&nbsp;Docker</span><span class="st">☁️&nbsp;AWS</span><span class="st">📡&nbsp;WebSockets</span>
+      <span class="st">📱&nbsp;Android SDK</span><span class="st">🧠&nbsp;TensorFlow</span><span class="st">🔐&nbsp;OpenSSL</span>
+      <span class="st">🐳&nbsp;Docker</span><span class="st">☁️&nbsp;AWS</span><span class="st">📡&nbsp;WebSockets</span>
+      <span class="st">📱&nbsp;Android SDK</span><span class="st">🧠&nbsp;TensorFlow</span><span class="st">🔐&nbsp;OpenSSL</span>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact">
+  <canvas id="bg-contact-sec" class="sec-bg"></canvas>
+  <div class="ct-grid">
+    <div class="r">
+      <div class="s-lbl">06 — Contact</div>
+      <h2 class="ct-h">LET'S<br>BUILD<br><span class="ghost">THINGS</span></h2>
+    </div>
+    <div class="ct-links r d1">
+      <a href="/cdn-cgi/l/email-protection#7c14191010133c0d091d12080911101d1e521513" class="ct-a"><span class="ct-at">✉ Send an Email</span><span class="ct-arr">→</span></a>
+      <a href="#" class="ct-a"><span class="ct-at">𝕏 Twitter / X</span><span class="ct-arr">→</span></a>
+      <a href="#" class="ct-a"><span class="ct-at">⌨ GitHub</span><span class="ct-arr">→</span></a>
+      <a href="#" class="ct-a"><span class="ct-at">💼 LinkedIn</span><span class="ct-arr">→</span></a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="f-l">Quantum Lab Builds_</div>
+  <div class="f-r">© 2025 — All experiments are ongoing</div>
+</footer>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+/* ─── LOADER ─── */
+const lf=document.getElementById('lf'),lpct=document.getElementById('lpct');
+let pp=0;
+const lt=setInterval(()=>{
+  pp+=Math.random()*7+2;if(pp>100)pp=100;
+  lf.style.width=pp+'%';lpct.textContent=Math.round(pp)+'%';
+  if(pp>=100){clearInterval(lt);setTimeout(()=>document.getElementById('loader').classList.add('gone'),400)}
+},80);
+
+/* ─── CURSOR ─── */
+const cdot=document.getElementById('cdot'),cring=document.getElementById('cring');
+let cx=-200,cy=-200,rx=-200,ry=-200;
+document.addEventListener('mousemove',e=>{cx=e.clientX;cy=e.clientY});
+(function ca(){
+  cdot.style.left=cx+'px';cdot.style.top=cy+'px';
+  rx+=(cx-rx)*.12;ry+=(cy-ry)*.12;
+  cring.style.left=rx+'px';cring.style.top=ry+'px';
+  requestAnimationFrame(ca);
+})();
+document.querySelectorAll('a,.pj-row,.cc,.ct-a').forEach(el=>{
+  el.addEventListener('mouseenter',()=>document.body.classList.add('hov'));
+  el.addEventListener('mouseleave',()=>document.body.classList.remove('hov'));
+});
+
+/* ─── MAIN 3D BACKGROUND ─── */
+/* A large morphing wireframe sphere that fills the whole page background —
+   NOT a Starwars HUD. It sits behind all content, quietly rotating. */
+(function(){
+  const canvas=document.getElementById('bgc');
+  if(!canvas||canvas.style.display==='none')return;
+  const R=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true});
+  R.setPixelRatio(Math.min(devicePixelRatio,2));
+  R.setSize(innerWidth,innerHeight);
+  const S=new THREE.Scene();
+  const C=new THREE.PerspectiveCamera(50,innerWidth/innerHeight,.1,300);
+  C.position.set(0,0,14);
+
+  /* ── large outer sphere ── */
+  const sG=new THREE.SphereGeometry(7,28,28);
+  const sM=new THREE.MeshBasicMaterial({color:0x1a1030,wireframe:true,transparent:true,opacity:.055});
+  const sphere=new THREE.Mesh(sG,sM); S.add(sphere);
+
+  /* ── inner pulsing icosahedron ── */
+  const iG=new THREE.IcosahedronGeometry(3.5,2);
+  const iOrig=iG.attributes.position.array.slice();
+  const iM=new THREE.MeshBasicMaterial({color:0xc0392b,wireframe:true,transparent:true,opacity:.04});
+  const ico=new THREE.Mesh(iG,iM); S.add(ico);
+
+  /* ── thin equator ring ── */
+  const rM=new THREE.Mesh(
+    new THREE.TorusGeometry(7,.012,12,100),
+    new THREE.MeshBasicMaterial({color:0xc0392b,transparent:true,opacity:.08})
+  );
+  rM.rotation.x=Math.PI/2; S.add(rM);
+
+  /* second ring, tilted */
+  const rM2=new THREE.Mesh(
+    new THREE.TorusGeometry(7,.008,12,100),
+    new THREE.MeshBasicMaterial({color:0xeeeae0,transparent:true,opacity:.03})
+  );
+  rM2.rotation.x=Math.PI/4; S.add(rM2);
+
+  /* ── scattered particles ── */
+  const N=1800,pg=new THREE.BufferGeometry();
+  const pa=new Float32Array(N*3),ca2=new Float32Array(N*3);
+  for(let i=0;i<N;i++){
+    const r=10+Math.random()*14,th=Math.random()*Math.PI*2,ph=Math.acos(2*Math.random()-1);
+    pa[i*3]=r*Math.sin(ph)*Math.cos(th);pa[i*3+1]=r*Math.sin(ph)*Math.sin(th);pa[i*3+2]=r*Math.cos(ph);
+    if(Math.random()<.25){ca2[i*3]=.75;ca2[i*3+1]=.22;ca2[i*3+2]=.17}
+    else{ca2[i*3]=.93;ca2[i*3+1]=.9;ca2[i*3+2]=.87}
+  }
+  pg.setAttribute('position',new THREE.BufferAttribute(pa,3));
+  pg.setAttribute('color',new THREE.BufferAttribute(ca2,3));
+  S.add(new THREE.Points(pg,new THREE.PointsMaterial({size:.032,vertexColors:true,transparent:true,opacity:.35})));
+
+  let mX=0,mY=0;
+  document.addEventListener('mousemove',e=>{mX=(e.clientX/innerWidth-.5)*.6;mY=(e.clientY/innerHeight-.5)*.6});
+
+  let t=0;
+  function anim(){
+    requestAnimationFrame(anim);t+=.003;
+    /* morph icosahedron vertices */
+    const pos=iG.attributes.position.array;
+    for(let i=0;i<pos.length;i+=3){
+      const ox=iOrig[i],oy=iOrig[i+1],oz=iOrig[i+2];
+      const n=Math.sin(ox*.9+t)*Math.cos(oy*.9+t)*.35;
+      pos[i]=ox+n;pos[i+1]=oy+n;pos[i+2]=oz+n;
+    }
+    iG.attributes.position.needsUpdate=true;
+    sphere.rotation.y+=.0012;sphere.rotation.x+=.0004;
+    ico.rotation.y-=.0009;ico.rotation.z+=.0014;
+    rM.rotation.z+=.0008;rM2.rotation.z-=.0006;
+    C.position.x+=(mX*3-C.position.x)*.025;
+    C.position.y+=(-mY*3-C.position.y)*.025;
+    C.lookAt(S.position);
+    R.render(S,C);
+  }
+  anim();
+  window.addEventListener('resize',()=>{C.aspect=innerWidth/innerHeight;C.updateProjectionMatrix();R.setSize(innerWidth,innerHeight)});
+})();
+
+/* ─── WORLD CONFLICT MAP (Radware-style) ─── */
+/* Draws a visible equirectangular world map with country-like outlines,
+   glowing hotspot nodes, and animated attack arcs between zones */
+(function(){
+  const wmc=document.getElementById('wmc');
+  const ctx=wmc.getContext('2d');
+  function resize(){wmc.width=wmc.offsetWidth;wmc.height=wmc.offsetHeight}
+  resize();
+  window.addEventListener('resize',resize);
+  const W=()=>wmc.width,H=()=>wmc.height;
+
+  /* World map: dense land-dot polygons approximating continents */
+  /* Each entry: center x/y (normalized 0-1), rx/ry spread, count, optional sub-patches */
+  const landRegions=[
+    /* North America */
+    {cx:.175,cy:.31,rx:.075,ry:.09,n:320},
+    {cx:.16,cy:.42,rx:.035,ry:.045,n:80},
+    {cx:.21,cy:.48,rx:.04,ry:.05,n:90},   // Central America
+    {cx:.135,cy:.22,rx:.03,ry:.04,n:40},  // Alaska
+    {cx:.295,cy:.16,rx:.035,ry:.05,n:45}, // Greenland
+    /* South America */
+    {cx:.265,cy:.56,rx:.055,ry:.06,n:180},
+    {cx:.28,cy:.66,rx:.04,ry:.06,n:130},
+    {cx:.26,cy:.77,rx:.025,ry:.04,n:55},
+    /* Europe */
+    {cx:.478,cy:.25,rx:.04,ry:.04,n:130},
+    {cx:.495,cy:.285,rx:.03,ry:.025,n:70},
+    {cx:.455,cy:.245,rx:.018,ry:.02,n:25}, // UK/Ireland
+    {cx:.505,cy:.21,rx:.025,ry:.02,n:35},  // Scandinavia
+    /* Africa */
+    {cx:.485,cy:.42,rx:.06,ry:.06,n:200},
+    {cx:.50,cy:.50,rx:.055,ry:.07,n:200},
+    {cx:.505,cy:.60,rx:.04,ry:.05,n:130},
+    {cx:.495,cy:.68,rx:.025,ry:.03,n:60},
+    /* Middle East */
+    {cx:.565,cy:.355,rx:.04,ry:.035,n:100},
+    {cx:.60,cy:.37,rx:.025,ry:.025,n:55},
+    /* Russia / Central Asia */
+    {cx:.60,cy:.22,rx:.09,ry:.06,n:280},
+    {cx:.67,cy:.185,rx:.06,ry:.04,n:120},
+    {cx:.725,cy:.18,rx:.04,ry:.03,n:70},
+    /* South Asia */
+    {cx:.635,cy:.38,rx:.04,ry:.045,n:120},
+    {cx:.655,cy:.42,rx:.03,ry:.035,n:70},
+    /* SE Asia */
+    {cx:.72,cy:.39,rx:.05,ry:.05,n:130},
+    {cx:.755,cy:.40,rx:.03,ry:.04,n:70},
+    {cx:.77,cy:.43,rx:.02,ry:.03,n:40},
+    /* East Asia */
+    {cx:.745,cy:.30,rx:.055,ry:.055,n:200},
+    {cx:.785,cy:.295,rx:.018,ry:.025,n:35}, // Japan
+    /* Australia */
+    {cx:.79,cy:.62,rx:.06,ry:.05,n:150},
+    {cx:.815,cy:.66,rx:.025,ry:.025,n:40},
+    /* Madagascar */
+    {cx:.545,cy:.63,rx:.01,ry:.025,n:20},
+    /* Sri Lanka / Philippines */
+    {cx:.655,cy:.455,rx:.008,ry:.01,n:8},
+    {cx:.775,cy:.415,rx:.012,ry:.02,n:14},
+  ];
+
+  const landDots=[];
+  landRegions.forEach(r=>{
+    for(let i=0;i<r.n;i++){
+      const a=Math.random()*Math.PI*2;
+      const dr=Math.sqrt(Math.random()); // uniform fill
+      landDots.push({nx:r.cx+Math.cos(a)*dr*r.rx, ny:r.cy+Math.sin(a)*dr*r.ry});
+    }
+  });
+
+  /* Conflict hotspots — calibrated to equirectangular projection */
+  const hotspots=[
+    /* Active wars */
+    {nx:.558,ny:.282,t:0,name:'Ukraine'},
+    {nx:.556,ny:.385,t:0,name:'Gaza / Israel'},
+    {nx:.538,ny:.468,t:0,name:'Sudan'},
+    {nx:.495,ny:.495,t:0,name:'DRC'},
+    {nx:.468,ny:.46,t:0,name:'Mali / Sahel'},
+    {nx:.495,ny:.485,t:0,name:'Nigeria'},
+    {nx:.545,ny:.458,t:0,name:'Ethiopia'},
+    {nx:.548,ny:.475,t:0,name:'Somalia'},
+    {nx:.573,ny:.395,t:0,name:'Yemen'},
+    {nx:.63,ny:.35,t:0,name:'Afghanistan'},
+    {nx:.563,ny:.355,t:0,name:'Syria'},
+    {nx:.722,ny:.402,t:0,name:'Myanmar'},
+    {nx:.345,ny:.528,t:0,name:'Haiti'},
+    {nx:.498,ny:.515,t:0,name:'Mozambique'},
+    /* Tensions */
+    {nx:.788,ny:.34,t:1,name:'South China Sea'},
+    {nx:.778,ny:.302,t:1,name:'Taiwan Strait'},
+    {nx:.778,ny:.272,t:1,name:'Korea DMZ'},
+    {nx:.566,ny:.362,t:1,name:'Iran'},
+    {nx:.608,ny:.328,t:1,name:'Kashmir'},
+    {nx:.298,ny:.448,t:1,name:'Venezuela'},
+    /* Historic */
+    {nx:.778,ny:.268,t:2,name:'Korea 1950'},
+    {nx:.498,ny:.472,t:2,name:'Rwanda 1994'},
+    {nx:.632,ny:.382,t:2,name:'Gulf War'},
+    {nx:.19,ny:.37,t:2,name:'Vietnam War'},
+  ];
+
+  /* Animated arcs */
+  const arcs=[];
+  function spawnArc(){
+    const active=hotspots.filter(h=>h.t===0);
+    const src=active[Math.floor(Math.random()*active.length)];
+    const pool=hotspots.filter(h=>h!==src);
+    const dst=pool[Math.floor(Math.random()*pool.length)];
+    arcs.push({src,dst,p:0,speed:.0035+Math.random()*.006,trail:[]});
+  }
+  setInterval(spawnArc,900);
+  for(let i=0;i<10;i++)spawnArc();
+
+  /* Ripples */
+  const ripples=[];
+  setInterval(()=>{
+    const h=hotspots[Math.floor(Math.random()*hotspots.length)];
+    ripples.push({nx:h.nx,ny:h.ny,r:0,max:20+Math.random()*18,speed:.38+Math.random()*.28,t:h.t});
+  },450);
+
+  const nodeColors=['#c0392b','#e67e22','#7d9464'];
+  const glowColors=['rgba(192,57,43,','rgba(230,126,34,','rgba(125,148,100,'];
+
+  /* pre-baked land dot positions (recomputed on resize) */
+  function draw(){
+    const w=W(),h=H();
+    ctx.clearRect(0,0,w,h);
+
+    if(!w||!h||!isFinite(w)||!isFinite(h))return;
+    /* ── deep background ── */
+    const bg=ctx.createRadialGradient(w*.5,h*.5,0,w*.5,h*.5,Math.max(w,1)*.65);
+    bg.addColorStop(0,'#0a0a18');bg.addColorStop(1,'#04040c');
+    ctx.fillStyle=bg;ctx.fillRect(0,0,w,h);
+
+    /* ── subtle latitude/longitude grid ── */
+    ctx.strokeStyle='rgba(100,120,180,0.07)';ctx.lineWidth=.5;ctx.setLineDash([]);
+    /* longitudes */
+    for(let lx=0;lx<=1;lx+=.1){
+      ctx.beginPath();ctx.moveTo(lx*w,0);ctx.lineTo(lx*w,h);ctx.stroke();
+    }
+    /* latitudes */
+    for(let ly=0;ly<=1;ly+=.1){
+      ctx.beginPath();ctx.moveTo(0,ly*h);ctx.lineTo(w,ly*h);ctx.stroke();
+    }
+    /* equator highlight */
+    ctx.strokeStyle='rgba(100,180,220,0.12)';ctx.lineWidth=1;ctx.setLineDash([6,10]);
+    ctx.beginPath();ctx.moveTo(0,h*.5);ctx.lineTo(w,h*.5);ctx.stroke();
+    ctx.strokeStyle='rgba(100,180,220,0.07)';
+    ctx.beginPath();ctx.moveTo(0,h*.355);ctx.lineTo(w,h*.355);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(0,h*.645);ctx.lineTo(w,h*.645);ctx.stroke();
+    ctx.setLineDash([]);
+
+    /* ── land dots ── */
+    landDots.forEach(d=>{
+      const lx=d.nx*w,ly=d.ny*h;
+      ctx.fillStyle='rgba(140,160,200,0.22)';
+      ctx.beginPath();ctx.arc(lx,ly,1.1,0,Math.PI*2);ctx.fill();
+    });
+
+    /* ── country border suggestion lines (dense point clusters form shapes) ── */
+    /* Additional thin country outline effect via slightly brighter edge dots */
+
+    const now=Date.now()*.001;
+
+    /* ── ripples ── */
+    for(let i=ripples.length-1;i>=0;i--){
+      const rp=ripples[i];rp.r+=rp.speed;
+      if(rp.r>rp.max){ripples.splice(i,1);continue}
+      const al=Math.max(0,(1-rp.r/rp.max)*.55);
+      ctx.beginPath();ctx.arc(rp.nx*w,rp.ny*h,rp.r,0,Math.PI*2);
+      ctx.strokeStyle=glowColors[rp.t]+al+')';ctx.lineWidth=1.2;ctx.stroke();
+    }
+
+    /* ── arc trails ── */
+    for(let i=arcs.length-1;i>=0;i--){
+      const a=arcs[i];a.p+=a.speed;
+      if(a.p>1.05){arcs.splice(i,1);continue}
+      const tp=Math.min(a.p,1);
+      const sx=a.src.nx*w,sy=a.src.ny*h;
+      const dx=a.dst.nx*w,dy=a.dst.ny*h;
+      const dist=Math.hypot(dx-sx,dy-sy);
+      const cpx=(sx+dx)/2,cpy=(sy+dy)/2-dist*.4;
+
+      /* glowing trail: draw thick blurred underneath, thin bright on top */
+      const STEPS=50;
+      const endStep=Math.round(tp*STEPS);
+
+      /* glow pass */
+      ctx.save();
+      ctx.shadowColor='rgba(41,128,185,.6)';ctx.shadowBlur=8;
+      ctx.beginPath();ctx.moveTo(sx,sy);
+      for(let s=1;s<=endStep;s++){
+        const tt=s/STEPS;
+        ctx.lineTo((1-tt)*(1-tt)*sx+2*(1-tt)*tt*cpx+tt*tt*dx,(1-tt)*(1-tt)*sy+2*(1-tt)*tt*cpy+tt*tt*dy);
+      }
+      ctx.strokeStyle='rgba(41,128,185,'+(0.4*(1-tp*.3))+')';
+      ctx.lineWidth=2.5;ctx.stroke();ctx.restore();
+
+      /* crisp line */
+      ctx.beginPath();ctx.moveTo(sx,sy);
+      for(let s=1;s<=endStep;s++){
+        const tt=s/STEPS;
+        ctx.lineTo((1-tt)*(1-tt)*sx+2*(1-tt)*tt*cpx+tt*tt*dx,(1-tt)*(1-tt)*sy+2*(1-tt)*tt*cpy+tt*tt*dy);
+      }
+      ctx.strokeStyle='rgba(52,152,219,'+(0.75*(1-tp*.4))+')';
+      ctx.lineWidth=1.2;ctx.stroke();
+
+      /* moving arrowhead dot */
+      const tp2=Math.min(a.p,1);
+      const px=(1-tp2)*(1-tp2)*sx+2*(1-tp2)*tp2*cpx+tp2*tp2*dx;
+      const py=(1-tp2)*(1-tp2)*sy+2*(1-tp2)*tp2*cpy+tp2*tp2*dy;
+      ctx.save();
+      ctx.shadowColor='rgba(52,152,219,.9)';ctx.shadowBlur=10;
+      ctx.beginPath();ctx.arc(px,py,3.5,0,Math.PI*2);ctx.fillStyle='#5dade2';ctx.fill();
+      ctx.restore();
+
+      /* impact flash at destination */
+      if(a.p>0.92){
+        const fa=(a.p-0.92)/0.13;
+        ctx.save();
+        ctx.shadowColor=nodeColors[a.src.t];ctx.shadowBlur=20;
+        ctx.beginPath();ctx.arc(a.dst.nx*w,a.dst.ny*h,3+fa*8,0,Math.PI*2);
+        ctx.strokeStyle=nodeColors[a.src.t];ctx.globalAlpha=1-fa;ctx.lineWidth=1.5;ctx.stroke();
+        ctx.restore();
+      }
+    }
+
+    /* ── hotspot nodes ── */
+    hotspots.forEach(h=>{
+      const hx=h.nx*w,hy=h.ny*H();
+      if(!isFinite(hx)||!isFinite(hy))return;
+      const pulse=.5+.5*Math.sin(now*2.2+h.nx*9+h.ny*5);
+
+      /* ambient glow for active wars */
+      if(h.t===0){
+        const gr=ctx.createRadialGradient(hx,hy,0,hx,hy,22);
+        gr.addColorStop(0,glowColors[0]+(.3*pulse)+')');
+        gr.addColorStop(1,glowColors[0]+'0)');
+        ctx.beginPath();ctx.arc(hx,hy,22,0,Math.PI*2);ctx.fillStyle=gr;ctx.fill();
+      }
+
+      /* outer ring */
+      ctx.beginPath();ctx.arc(hx,hy,9+pulse*7,0,Math.PI*2);
+      ctx.strokeStyle=glowColors[h.t]+(.32*(1-pulse*.45))+')';ctx.lineWidth=1;ctx.stroke();
+
+      /* inner ring */
+      ctx.beginPath();ctx.arc(hx,hy,5+pulse*3,0,Math.PI*2);
+      ctx.strokeStyle=glowColors[h.t]+(.2)+')';ctx.lineWidth=.6;ctx.stroke();
+
+      /* core dot */
+      ctx.save();
+      ctx.shadowColor=nodeColors[h.t];ctx.shadowBlur=h.t===0?12:6;
+      ctx.beginPath();ctx.arc(hx,hy,h.t===0?4.5:h.t===1?3.5:2.5,0,Math.PI*2);
+      ctx.fillStyle=nodeColors[h.t];ctx.fill();
+      ctx.restore();
+
+      /* label */
+      if(w>640){
+        ctx.font=`700 8.5px 'Syncopate',monospace`;
+        ctx.fillStyle=h.t===0?'rgba(192,57,43,.8)':h.t===1?'rgba(230,126,34,.65)':'rgba(125,148,100,.45)';
+        ctx.fillText(h.name.toUpperCase(),hx+7,hy-7);
+      }
+    });
+
+    /* ── vignette ── */
+    if(!w||!h)return;
+    const vig=ctx.createRadialGradient(w*.5,h*.5,Math.max(h*.25,1),w*.5,h*.5,Math.max(w*.65,1));
+    vig.addColorStop(0,'rgba(0,0,0,0)');vig.addColorStop(1,'rgba(4,4,12,.65)');
+    ctx.fillStyle=vig;ctx.fillRect(0,0,w,h);
+
+    requestAnimationFrame(draw);
+  }
+  draw();
+
+  setInterval(()=>{
+    document.getElementById('ws-a').textContent=40+Math.floor(Math.random()*5);
+    document.getElementById('ws-t').textContent=25+Math.floor(Math.random()*7);
+    document.getElementById('ws-c').textContent=63+Math.floor(Math.random()*8);
+  },2800);
+})();
+
+/* ─── PROJECT HOVER 3D PREVIEW ─── */
+(function(){
+  const pv=document.getElementById('pprev'),ppc=document.getElementById('ppc');
+  const R=new THREE.WebGLRenderer({canvas:ppc,alpha:true,antialias:true});
+  R.setSize(310,210);
+  R.setClearColor(0x000000,0);
+  const S=new THREE.Scene();
+  const C=new THREE.PerspectiveCamera(44,310/210,.1,100);
+  C.position.z=4;
+  let mesh=null,rafId=null;
+
+  function clear(){
+    while(S.children.length)S.remove(S.children[0]);
+    mesh=null;if(rafId)cancelAnimationFrame(rafId);
+  }
+
+  function build(type){
+    clear();
+    if(type==='globe'){
+      /* Conflict Atlas: rotating globe with surface dots */
+      const g=new THREE.IcosahedronGeometry(1.1,4);
+      mesh=new THREE.Mesh(g,new THREE.MeshBasicMaterial({color:0xc0392b,wireframe:true,transparent:true,opacity:.22}));
+      S.add(mesh);
+      const pg2=new THREE.BufferGeometry();
+      const pa=[];
+      for(let i=0;i<300;i++){
+        const phi=Math.acos(2*Math.random()-1),th=Math.random()*Math.PI*2;
+        pa.push(1.12*Math.sin(phi)*Math.cos(th),1.12*Math.sin(phi)*Math.sin(th),1.12*Math.cos(phi));
+      }
+      pg2.setAttribute('position',new THREE.BufferAttribute(new Float32Array(pa),3));
+      S.add(new THREE.Points(pg2,new THREE.PointsMaterial({color:0xc0392b,size:.028})));
+
+    }else if(type==='torus'){
+      /* Signal Zero: torus knot — comms/network shape */
+      mesh=new THREE.Mesh(
+        new THREE.TorusKnotGeometry(.85,.25,120,18),
+        new THREE.MeshBasicMaterial({color:0xe67e22,wireframe:true,transparent:true,opacity:.28})
+      );
+      S.add(mesh);
+
+    }else if(type==='grid'){
+      /* Packet Core: exploded box / wireframe cube cluster */
+      for(let i=0;i<3;i++){
+        const m=new THREE.Mesh(
+          new THREE.BoxGeometry(.6+i*.3,.6+i*.3,.6+i*.3),
+          new THREE.MeshBasicMaterial({color:i===0?0x7d9464:0xeeeae0,wireframe:true,transparent:true,opacity:.25-i*.06})
+        );
+        m.userData.rx=(Math.random()-.5)*.018;
+        m.userData.ry=(Math.random()-.5)*.022;
+        S.add(m);
+      }
+      mesh=S.children[0];
+
+    }else if(type==='neural'){
+      /* Neural Watch: helix / DNA-like double spiral — distinct from globe */
+      const pts1=[],pts2=[];
+      for(let i=0;i<80;i++){
+        const t=i/79*Math.PI*4;
+        const r=.9;
+        pts1.push(new THREE.Vector3(Math.cos(t)*r,i/79*2.4-1.2,Math.sin(t)*r));
+        pts2.push(new THREE.Vector3(Math.cos(t+Math.PI)*r,i/79*2.4-1.2,Math.sin(t+Math.PI)*r));
+      }
+      const curve1=new THREE.CatmullRomCurve3(pts1);
+      const curve2=new THREE.CatmullRomCurve3(pts2);
+      const g1=new THREE.TubeGeometry(curve1,80,0.025,8,false);
+      const g2=new THREE.TubeGeometry(curve2,80,0.025,8,false);
+      const helixMat=new THREE.MeshBasicMaterial({color:0x2980b9,transparent:true,opacity:.7});
+      S.add(new THREE.Mesh(g1,helixMat));
+      S.add(new THREE.Mesh(g2,helixMat));
+      /* rungs connecting the two helixes */
+      for(let i=0;i<16;i++){
+        const ti=i/15;
+        const p1=curve1.getPoint(ti);
+        const p2=curve2.getPoint(ti);
+        const rg=new THREE.BufferGeometry().setFromPoints([p1,p2]);
+        S.add(new THREE.Line(rg,new THREE.LineBasicMaterial({color:0x2980b9,transparent:true,opacity:.35})));
+      }
+      mesh=null; // no single mesh to rotate; rotate scene instead
+
+    }else if(type==='rings'){
+      /* Darkboard: nested orbital rings */
+      const cols=[0xc0392b,0xeeeae0,0xe67e22,0x7d9464];
+      for(let i=0;i<4;i++){
+        const r=new THREE.Mesh(
+          new THREE.TorusGeometry(.42+i*.32,.013,14,80),
+          new THREE.MeshBasicMaterial({color:cols[i],transparent:true,opacity:.32-i*.05})
+        );
+        r.rotation.x=Math.random()*Math.PI;r.rotation.y=Math.random()*Math.PI;
+        r.userData.rx=(Math.random()-.5)*.018;r.userData.ry=(Math.random()-.5)*.016;
+        S.add(r);
+      }
+      mesh=null;
+    }
+
+    function af(){
+      rafId=requestAnimationFrame(af);
+      if(mesh){mesh.rotation.x+=.011;mesh.rotation.y+=.008}
+      S.children.forEach(m=>{
+        if(m.userData.rx){m.rotation.x+=m.userData.rx;m.rotation.y+=m.userData.ry}
+      });
+      if(type==='neural'){S.rotation.y+=.012}
+      R.render(S,C);
+    }
+    af();
+  }
+
+  let ht=null;
+  document.querySelectorAll('.pj-row').forEach(el=>{
+    el.addEventListener('mouseenter',()=>{build(el.dataset.scene||'globe');pv.style.opacity='1';ht=el});
+    el.addEventListener('mouseleave',()=>{pv.style.opacity='0';ht=null;clear()});
+  });
+  document.addEventListener('mousemove',e=>{if(ht){pv.style.left=(e.clientX+22)+'px';pv.style.top=(e.clientY-105)+'px'}});
+})();
+
+/* ─── SCROLL REVEAL ─── */
+const revs=document.querySelectorAll('.r');
+const _ro=new IntersectionObserver((entries)=>{
+  entries.forEach((e,i)=>{if(e.isIntersecting)setTimeout(()=>e.target.classList.add('vis'),i*75)});
+},{threshold:.07});
+revs.forEach(el=>_ro.observe(el));
+
+/* ─── NAV SCROLL INDEX ─── */
+window.addEventListener('scroll',()=>{
+  const p=Math.round(scrollY/(document.body.scrollHeight-innerHeight)*100);
+  document.getElementById('ns').textContent=String(p).padStart(3,'0');
+});
+
+
+/* ═══════════════════════════════════════════════════════════
+   HERO BACKGROUND — sci-fi dark teal atmosphere
+   Reference: robot/skull image — glowing orb, molecule nodes,
+   circuit lines, deep teal fog, particle dust
+   ═══════════════════════════════════════════════════════════ */
+(function(){
+  const hc = document.getElementById('hero3d');
+  if(!hc) return;
+  const ctx = hc.getContext('2d');
+
+  function resize(){
+    hc.width  = hc.offsetWidth  || window.innerWidth;
+    hc.height = hc.offsetHeight || window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  const W = () => hc.width;
+  const H = () => hc.height;
+
+  /* ── molecule nodes ── */
+  const NODE_COUNT = 38;
+  const nodes = [];
+  for(let i = 0; i < NODE_COUNT; i++){
+    const angle = Math.random() * Math.PI * 2;
+    const radius = 80 + Math.random() * Math.min(W(), H()) * 0.42;
+    nodes.push({
+      x: W()/2 + Math.cos(angle) * radius * (0.4 + Math.random()*0.8),
+      y: H()/2 + Math.sin(angle) * radius * (0.4 + Math.random()*0.8),
+      vx: (Math.random()-0.5) * 0.28,
+      vy: (Math.random()-0.5) * 0.28,
+      r: 1.8 + Math.random() * 3.5,
+      pulse: Math.random() * Math.PI * 2,
+      type: Math.floor(Math.random()*3)  // 0=teal, 1=blue, 2=white
+    });
+  }
+
+  /* ── halo rings (like the circular arc in the image) ── */
+  const halos = [
+    {ox:-0.22, oy:-0.05, r:0.28, rot:0, speed:0.0008, opacity:0.12, color:'#4ecdc4'},
+    {ox: 0.18, oy: 0.04, r:0.24, rot:1.2, speed:-0.0006, opacity:0.10, color:'#2a9d8f'},
+    {ox:-0.05, oy: 0.0,  r:0.42, rot:0.5, speed:0.0004, opacity:0.07, color:'#264653'},
+  ];
+
+  /* ── floating circuit dots ── */
+  const dustCount = 120;
+  const dust = [];
+  for(let i=0;i<dustCount;i++){
+    dust.push({
+      x: Math.random()*1.2 - 0.1,
+      y: Math.random()*1.2 - 0.1,
+      size: 0.5 + Math.random()*1.5,
+      opacity: 0.04 + Math.random()*0.18,
+      vx: (Math.random()-0.5)*0.0003,
+      vy: -0.0001 - Math.random()*0.0003
+    });
+  }
+
+  let mouseX = 0.5, mouseY = 0.5;
+  document.addEventListener('mousemove', e=>{
+    mouseX = e.clientX / window.innerWidth;
+    mouseY = e.clientY / window.innerHeight;
+  });
+
+  let t = 0;
+
+  function draw(){
+    requestAnimationFrame(draw);
+    t += 0.012;
+    const w = W(), h = H();
+
+    /* ── BACKGROUND gradient — dark teal/slate like the image ── */
+    const bg = ctx.createRadialGradient(w*0.5, h*0.5, 0, w*0.5, h*0.5, Math.max(w,h)*0.75);
+    bg.addColorStop(0,   '#0d1f2d');
+    bg.addColorStop(0.35,'#0a1a26');
+    bg.addColorStop(0.65,'#071318');
+    bg.addColorStop(1,   '#040d12');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, w, h);
+
+    /* ── atmospheric teal fog layers ── */
+    const fogL = ctx.createRadialGradient(w*0.28, h*0.5, 0, w*0.28, h*0.5, w*0.45);
+    fogL.addColorStop(0,  'rgba(42,157,143,0.07)');
+    fogL.addColorStop(1,  'rgba(42,157,143,0)');
+    ctx.fillStyle = fogL; ctx.fillRect(0,0,w,h);
+
+    const fogR = ctx.createRadialGradient(w*0.72, h*0.5, 0, w*0.72, h*0.5, w*0.4);
+    fogR.addColorStop(0,  'rgba(38,70,83,0.09)');
+    fogR.addColorStop(1,  'rgba(38,70,83,0)');
+    ctx.fillStyle = fogR; ctx.fillRect(0,0,w,h);
+
+    /* ── subtle horizontal depth bands ── */
+    for(let band=0; band<3; band++){
+      const by = h*(0.3 + band*0.2);
+      const bandG = ctx.createLinearGradient(0, by-60, 0, by+60);
+      bandG.addColorStop(0,  'rgba(78,205,196,0)');
+      bandG.addColorStop(0.5,'rgba(78,205,196,0.018)');
+      bandG.addColorStop(1,  'rgba(78,205,196,0)');
+      ctx.fillStyle = bandG; ctx.fillRect(0, by-60, w, 120);
+    }
+
+    /* ── halo rings ── */
+    halos.forEach(h2 => {
+      h2.rot += h2.speed;
+      const hx = w*(0.5 + h2.ox + (mouseX-0.5)*0.04);
+      const hy = h*(0.5 + h2.oy + (mouseY-0.5)*0.04);
+      const hr = Math.min(w,h)*h2.r;
+      ctx.save();
+      ctx.translate(hx, hy);
+      ctx.rotate(h2.rot);
+      ctx.beginPath();
+      ctx.arc(0, 0, hr, 0, Math.PI*2);
+      ctx.strokeStyle = h2.color;
+      ctx.globalAlpha = h2.opacity + Math.sin(t*0.4)*0.02;
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      /* dashed inner ring */
+      ctx.setLineDash([6, 18]);
+      ctx.beginPath();
+      ctx.arc(0, 0, hr*0.88, 0, Math.PI*2);
+      ctx.globalAlpha = h2.opacity * 0.5;
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.restore();
+      ctx.globalAlpha = 1;
+    });
+
+    /* ── connection lines between nearby nodes ── */
+    const CONNECT_DIST = Math.min(w,h) * 0.22;
+    for(let i=0; i<nodes.length; i++){
+      for(let j=i+1; j<nodes.length; j++){
+        const dx = nodes[i].x - nodes[j].x;
+        const dy = nodes[i].y - nodes[j].y;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        if(dist < CONNECT_DIST){
+          const alpha = (1 - dist/CONNECT_DIST) * 0.18;
+          ctx.beginPath();
+          ctx.moveTo(nodes[i].x, nodes[i].y);
+          ctx.lineTo(nodes[j].x, nodes[j].y);
+          ctx.strokeStyle = `rgba(78,205,196,${alpha})`;
+          ctx.lineWidth = 0.6;
+          ctx.stroke();
+        }
+      }
+    }
+
+    /* ── glowing central energy orb (like the beam between skull and robot) ── */
+    const ox = w*0.5 + (mouseX-0.5)*w*0.06;
+    const oy = h*0.5 + (mouseY-0.5)*h*0.06;
+    const pulse = 0.85 + 0.15*Math.sin(t*1.2);
+
+    /* outer glow */
+    const orbOuter = ctx.createRadialGradient(ox,oy,0, ox,oy, 160*pulse);
+    orbOuter.addColorStop(0,   'rgba(78,205,196,0.12)');
+    orbOuter.addColorStop(0.3, 'rgba(42,157,143,0.07)');
+    orbOuter.addColorStop(1,   'rgba(26,90,80,0)');
+    ctx.fillStyle = orbOuter; ctx.beginPath(); ctx.arc(ox,oy,160*pulse,0,Math.PI*2); ctx.fill();
+
+    /* mid ring */
+    const orbMid = ctx.createRadialGradient(ox,oy,0, ox,oy, 60*pulse);
+    orbMid.addColorStop(0,   'rgba(120,230,220,0.25)');
+    orbMid.addColorStop(0.5, 'rgba(78,205,196,0.12)');
+    orbMid.addColorStop(1,   'rgba(78,205,196,0)');
+    ctx.fillStyle = orbMid; ctx.beginPath(); ctx.arc(ox,oy,60*pulse,0,Math.PI*2); ctx.fill();
+
+    /* core bright dot */
+    const orbCore = ctx.createRadialGradient(ox,oy,0, ox,oy, 18*pulse);
+    orbCore.addColorStop(0,   'rgba(200,255,250,0.95)');
+    orbCore.addColorStop(0.4, 'rgba(78,205,196,0.7)');
+    orbCore.addColorStop(1,   'rgba(78,205,196,0)');
+    ctx.fillStyle = orbCore; ctx.beginPath(); ctx.arc(ox,oy,18*pulse,0,Math.PI*2); ctx.fill();
+
+    /* ── horizontal energy beam through center ── */
+    const beamAlpha = 0.06 + 0.03*Math.sin(t*0.8);
+    const beamG = ctx.createLinearGradient(0, oy, w, oy);
+    beamG.addColorStop(0,   'rgba(78,205,196,0)');
+    beamG.addColorStop(0.3, `rgba(78,205,196,${beamAlpha})`);
+    beamG.addColorStop(0.5, `rgba(180,255,248,${beamAlpha*2})`);
+    beamG.addColorStop(0.7, `rgba(78,205,196,${beamAlpha})`);
+    beamG.addColorStop(1,   'rgba(78,205,196,0)');
+    ctx.fillStyle = beamG;
+    ctx.fillRect(0, oy-1.5, w, 3);
+
+    /* ── molecule nodes ── */
+    nodes.forEach(nd => {
+      nd.x += nd.vx + (mouseX-0.5)*0.15;
+      nd.y += nd.vy + (mouseY-0.5)*0.12;
+      nd.pulse += 0.025;
+      /* wrap */
+      if(nd.x < -40) nd.x = w+40;
+      if(nd.x > w+40) nd.x = -40;
+      if(nd.y < -40) nd.y = h+40;
+      if(nd.y > h+40) nd.y = -40;
+
+      const p = 0.7 + 0.3*Math.sin(nd.pulse);
+      const colors = ['rgba(78,205,196,','rgba(52,152,219,','rgba(200,240,235,'];
+      const r = nd.r * p;
+
+      /* glow */
+      if(nd.type < 2){
+        const ng = ctx.createRadialGradient(nd.x,nd.y,0, nd.x,nd.y, r*5);
+        ng.addColorStop(0,  colors[nd.type]+'0.3)');
+        ng.addColorStop(1,  colors[nd.type]+'0)');
+        ctx.fillStyle = ng;
+        ctx.beginPath(); ctx.arc(nd.x, nd.y, r*5, 0, Math.PI*2); ctx.fill();
+      }
+      /* core */
+      ctx.beginPath(); ctx.arc(nd.x, nd.y, r, 0, Math.PI*2);
+      ctx.fillStyle = colors[nd.type]+(0.6+0.4*p)+')';
+      ctx.fill();
+    });
+
+    /* ── floating dust particles ── */
+    dust.forEach(d => {
+      d.x += d.vx; d.y += d.vy;
+      if(d.y < -0.05){ d.y = 1.05; d.x = Math.random(); }
+      ctx.beginPath();
+      ctx.arc(d.x*w, d.y*h, d.size, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(120,210,200,${d.opacity})`;
+      ctx.fill();
+    });
+
+    /* ── scan line overlay ── */
+    const scanY = (t * 60) % h;
+    const scanG = ctx.createLinearGradient(0, scanY-40, 0, scanY+40);
+    scanG.addColorStop(0,   'rgba(78,205,196,0)');
+    scanG.addColorStop(0.5, 'rgba(78,205,196,0.025)');
+    scanG.addColorStop(1,   'rgba(78,205,196,0)');
+    ctx.fillStyle = scanG; ctx.fillRect(0, scanY-40, w, 80);
+
+    /* ── subtle vignette ── */
+    const vig = ctx.createRadialGradient(w/2, h/2, h*0.15, w/2, h/2, Math.max(w,h)*0.75);
+    vig.addColorStop(0, 'rgba(0,0,0,0)');
+    vig.addColorStop(1, 'rgba(0,0,0,0.65)');
+    ctx.fillStyle = vig; ctx.fillRect(0,0,w,h);
+  }
+
+  draw();
+})();
+
+/* ═══════════════════════════════════════════════════════════
+   PER-SECTION BACKGROUND SYSTEM — DEVLAB style
+   Each section activates its own unique Three.js scene
+   ═══════════════════════════════════════════════════════════ */
+
+(function(){
+  if(typeof THREE==='undefined')return;
+
+  /* shared helper: make renderer for a canvas */
+  function makeR(canvas){
+    if(!canvas)return null;
+    const R=new THREE.WebGLRenderer({canvas,alpha:true,antialias:false});
+    R.setPixelRatio(Math.min(devicePixelRatio,1.5));
+    function sz(){
+      const w=canvas.offsetWidth||canvas.parentElement?.offsetWidth||window.innerWidth;
+      const h=canvas.offsetHeight||canvas.parentElement?.offsetHeight||window.innerHeight;
+      R.setSize(w,h,false);
+      return {w,h};
+    }
+    sz();
+    window.addEventListener('resize',sz);
+    R.setClearColor(0x000000,0);
+    return {R,sz};
+  }
+
+  /* ── SCENE DEFINITIONS ── */
+
+  /* 01 ABOUT — cyan particle field (DEVLAB hero energy) */
+  function sceneAbout(canvas){
+    const {R}=makeR(canvas)||{};if(!R)return;
+    const S=new THREE.Scene(),C=new THREE.PerspectiveCamera(60,canvas.offsetWidth/canvas.offsetHeight||2,.1,200);
+    C.position.z=6;
+    const N=2500,g=new THREE.BufferGeometry();
+    const pos=new Float32Array(N*3),col=new Float32Array(N*3);
+    for(let i=0;i<N;i++){
+      pos[i*3]=(Math.random()-.5)*30;pos[i*3+1]=(Math.random()-.5)*20;pos[i*3+2]=(Math.random()-.5)*15;
+      const r=Math.random();
+      if(r<.55){col[i*3]=0;col[i*3+1]=.96;col[i*3+2]=.77}
+      else if(r<.75){col[i*3]=1;col[i*3+1]=.24;col[i*3+2]=.42}
+      else{col[i*3]=.48;col[i*3+1]=.38;col[i*3+2]=1}
+    }
+    g.setAttribute('position',new THREE.BufferAttribute(pos,3));
+    g.setAttribute('color',new THREE.BufferAttribute(col,3));
+    const pts=new THREE.Points(g,new THREE.PointsMaterial({size:.045,vertexColors:true,transparent:true,opacity:.55}));
+    S.add(pts);
+    /* large wireframe icosahedron */
+    const ico=new THREE.Mesh(new THREE.IcosahedronGeometry(4,1),new THREE.MeshBasicMaterial({color:0x00f5c4,wireframe:true,transparent:true,opacity:.04}));
+    S.add(ico);
+    let active=false,rafId=null;
+    function animate(){rafId=requestAnimationFrame(animate);pts.rotation.y+=.0003;pts.rotation.x+=.0001;ico.rotation.y+=.0015;ico.rotation.x+=.0008;R.render(S,C)}
+    return {start:()=>{if(!active){active=true;animate()}},stop:()=>{active=false;if(rafId)cancelAnimationFrame(rafId)}};
+  }
+
+  /* 02 PROJECTS — purple/magenta floating icosahedra */
+  function sceneProjects(canvas){
+    const {R}=makeR(canvas)||{};if(!R)return;
+    const S=new THREE.Scene(),C=new THREE.PerspectiveCamera(55,canvas.offsetWidth/canvas.offsetHeight||2,.1,200);
+    C.position.z=8;
+    const meshes=[];
+    for(let i=0;i<6;i++){
+      const m=new THREE.Mesh(
+        new THREE.IcosahedronGeometry(.5+Math.random()*.8,1),
+        new THREE.MeshBasicMaterial({color:i%3===0?0x7b61ff:i%3===1?0xff3d6b:0x00f5c4,wireframe:true,transparent:true,opacity:.12+Math.random()*.08})
+      );
+      m.position.set((Math.random()-.5)*16,(Math.random()-.5)*10,(Math.random()-.5)*6-2);
+      m.userData={rx:(Math.random()-.5)*.008,ry:(Math.random()-.5)*.01};
+      S.add(m);meshes.push(m);
+    }
+    const N=1500,g=new THREE.BufferGeometry();
+    const pos=new Float32Array(N*3),col=new Float32Array(N*3);
+    for(let i=0;i<N;i++){
+      pos[i*3]=(Math.random()-.5)*28;pos[i*3+1]=(Math.random()-.5)*18;pos[i*3+2]=(Math.random()-.5)*12;
+      col[i*3]=.48;col[i*3+1]=.38;col[i*3+2]=1;
+    }
+    g.setAttribute('position',new THREE.BufferAttribute(pos,3));
+    g.setAttribute('color',new THREE.BufferAttribute(col,3));
+    S.add(new THREE.Points(g,new THREE.PointsMaterial({size:.035,vertexColors:true,transparent:true,opacity:.4})));
+    let active=false,rafId=null;
+    function animate(){rafId=requestAnimationFrame(animate);meshes.forEach(m=>{m.rotation.x+=m.userData.rx;m.rotation.y+=m.userData.ry});R.render(S,C)}
+    return {start:()=>{if(!active){active=true;animate()}},stop:()=>{active=false;if(rafId)cancelAnimationFrame(rafId)}};
+  }
+
+  /* 03 WAR MAP — red/amber threat energy */
+  function sceneWarmap(canvas){
+    const {R}=makeR(canvas)||{};if(!R)return;
+    const S=new THREE.Scene(),C=new THREE.PerspectiveCamera(55,canvas.offsetWidth/canvas.offsetHeight||2,.1,200);
+    C.position.z=8;
+    /* spinning torus rings */
+    const rings=[];
+    for(let i=0;i<5;i++){
+      const r=new THREE.Mesh(
+        new THREE.TorusGeometry(2+i*.8,.015,12,80),
+        new THREE.MeshBasicMaterial({color:i%2===0?0xc0392b:0xe67e22,transparent:true,opacity:.07+i*.01})
+      );
+      r.rotation.x=Math.random()*Math.PI;r.rotation.y=Math.random()*Math.PI;
+      r.userData={rz:(Math.random()-.5)*.006};
+      S.add(r);rings.push(r);
+    }
+    const N=1800,g=new THREE.BufferGeometry();
+    const pos=new Float32Array(N*3),col=new Float32Array(N*3);
+    for(let i=0;i<N;i++){
+      pos[i*3]=(Math.random()-.5)*30;pos[i*3+1]=(Math.random()-.5)*20;pos[i*3+2]=(Math.random()-.5)*12;
+      if(Math.random()<.6){col[i*3]=.75;col[i*3+1]=.22;col[i*3+2]=.17}
+      else{col[i*3]=.9;col[i*3+1]=.5;col[i*3+2]=.14}
+    }
+    g.setAttribute('position',new THREE.BufferAttribute(pos,3));
+    g.setAttribute('color',new THREE.BufferAttribute(col,3));
+    S.add(new THREE.Points(g,new THREE.PointsMaterial({size:.04,vertexColors:true,transparent:true,opacity:.45})));
+    let active=false,rafId=null;
+    function animate(){rafId=requestAnimationFrame(animate);rings.forEach(r=>{r.rotation.z+=r.userData.rz;r.rotation.x+=.001});R.render(S,C)}
+    return {start:()=>{if(!active){active=true;animate()}},stop:()=>{active=false;if(rafId)cancelAnimationFrame(rafId)}};
+  }
+
+  /* 04 CONFLICTS — dark olive/amber grid + particles */
+  function sceneConflicts(canvas){
+    const {R}=makeR(canvas)||{};if(!R)return;
+    const S=new THREE.Scene(),C=new THREE.PerspectiveCamera(55,canvas.offsetWidth/canvas.offsetHeight||2,.1,200);
+    C.position.set(0,3,8);C.lookAt(0,0,0);
+    const grid=new THREE.GridHelper(30,20,0x7d9464,0x7d9464);
+    grid.material.opacity=.08;grid.material.transparent=true;
+    S.add(grid);
+    const cubes=[];
+    for(let i=0;i<10;i++){
+      const m=new THREE.Mesh(new THREE.BoxGeometry(.3+Math.random()*.5,.3+Math.random()*.5,.3+Math.random()*.5),
+        new THREE.MeshBasicMaterial({color:i%2===0?0xe67e22:0x7d9464,wireframe:true,transparent:true,opacity:.15}));
+      m.position.set((Math.random()-.5)*20,Math.random()*2,(Math.random()-.5)*15);
+      m.userData={rx:(Math.random()-.5)*.012,ry:(Math.random()-.5)*.015};
+      S.add(m);cubes.push(m);
+    }
+    let active=false,rafId=null;
+    function animate(){rafId=requestAnimationFrame(animate);grid.rotation.y+=.001;cubes.forEach(m=>{m.rotation.x+=m.userData.rx;m.rotation.y+=m.userData.ry});R.render(S,C)}
+    return {start:()=>{if(!active){active=true;animate()}},stop:()=>{active=false;if(rafId)cancelAnimationFrame(rafId)}};
+  }
+
+  /* 05 STACK — blue/cyan flowing lines */
+  function sceneStack(canvas){
+    const {R}=makeR(canvas)||{};if(!R)return;
+    const S=new THREE.Scene(),C=new THREE.PerspectiveCamera(55,canvas.offsetWidth/canvas.offsetHeight||2,.1,200);
+    C.position.z=7;
+    const lines=[];
+    for(let i=0;i<40;i++){
+      const y=(Math.random()-.5)*12;
+      const pts=[new THREE.Vector3(-18,y,0),new THREE.Vector3(18,y,0)];
+      const lg=new THREE.BufferGeometry().setFromPoints(pts);
+      const lm=new THREE.LineBasicMaterial({color:Math.random()<.5?0x00f5c4:0x2980b9,transparent:true,opacity:.03+Math.random()*.05});
+      const l=new THREE.Line(lg,lm);l.userData.speed=(Math.random()-.5)*.003;
+      S.add(l);lines.push(l);
+    }
+    const N=1200,g=new THREE.BufferGeometry();
+    const pos=new Float32Array(N*3),col=new Float32Array(N*3);
+    for(let i=0;i<N;i++){
+      pos[i*3]=(Math.random()-.5)*28;pos[i*3+1]=(Math.random()-.5)*16;pos[i*3+2]=(Math.random()-.5)*10;
+      col[i*3]=0;col[i*3+1]=.96;col[i*3+2]=.77;
+    }
+    g.setAttribute('position',new THREE.BufferAttribute(pos,3));
+    g.setAttribute('color',new THREE.BufferAttribute(col,3));
+    S.add(new THREE.Points(g,new THREE.PointsMaterial({size:.03,vertexColors:true,transparent:true,opacity:.35})));
+    let active=false,rafId=null;
+    function animate(){rafId=requestAnimationFrame(animate);lines.forEach(l=>{l.position.y+=l.userData.speed;if(l.position.y>8)l.position.y=-8;if(l.position.y<-8)l.position.y=8});R.render(S,C)}
+    return {start:()=>{if(!active){active=true;animate()}},stop:()=>{active=false;if(rafId)cancelAnimationFrame(rafId)}};
+  }
+
+  /* 06 CONTACT — pink/magenta burst */
+  function sceneContact(canvas){
+    const {R}=makeR(canvas)||{};if(!R)return;
+    const S=new THREE.Scene(),C=new THREE.PerspectiveCamera(55,canvas.offsetWidth/canvas.offsetHeight||2,.1,200);
+    C.position.z=7;
+    const sph=new THREE.Mesh(new THREE.IcosahedronGeometry(2.5,2),new THREE.MeshBasicMaterial({color:0xff3d6b,wireframe:true,transparent:true,opacity:.055}));
+    S.add(sph);
+    const N=2000,g=new THREE.BufferGeometry();
+    const pos=new Float32Array(N*3),col=new Float32Array(N*3);
+    for(let i=0;i<N;i++){
+      pos[i*3]=(Math.random()-.5)*26;pos[i*3+1]=(Math.random()-.5)*18;pos[i*3+2]=(Math.random()-.5)*12;
+      if(Math.random()<.6){col[i*3]=1;col[i*3+1]=.24;col[i*3+2]=.42}
+      else{col[i*3]=.48;col[i*3+1]=.38;col[i*3+2]=1}
+    }
+    g.setAttribute('position',new THREE.BufferAttribute(pos,3));
+    g.setAttribute('color',new THREE.BufferAttribute(col,3));
+    S.add(new THREE.Points(g,new THREE.PointsMaterial({size:.038,vertexColors:true,transparent:true,opacity:.45})));
+    let active=false,rafId=null,t=0;
+    const icoOrig=sph.geometry.attributes.position.array.slice();
+    function animate(){
+      rafId=requestAnimationFrame(animate);t+=.004;
+      const p=sph.geometry.attributes.position.array;
+      for(let i=0;i<p.length;i+=3){const n=Math.sin(icoOrig[i]*.9+t)*Math.cos(icoOrig[i+1]*.9+t)*.25;p[i]=icoOrig[i]+n;p[i+1]=icoOrig[i+1]+n;p[i+2]=icoOrig[i+2]+n}
+      sph.geometry.attributes.position.needsUpdate=true;
+      sph.rotation.y+=.002;
+      R.render(S,C);
+    }
+    return {start:()=>{if(!active){active=true;animate()}},stop:()=>{active=false;if(rafId)cancelAnimationFrame(rafId)}};
+  }
+
+  /* ── WIRING: activate scenes on scroll via IntersectionObserver ── */
+  const sectionScenes=[
+    {canvasId:'bg-about',    sectionId:'about',        builder:sceneAbout},
+    {canvasId:'bg-projects', sectionId:'projects',     builder:sceneProjects},
+    {canvasId:'bg-warmap-sec',sectionId:'warmap',      builder:sceneWarmap},
+    {canvasId:'bg-conflicts-sec',sectionId:'conflicts',builder:sceneConflicts},
+    {canvasId:'bg-stack-sec',sectionId:'stack',        builder:sceneStack},
+    {canvasId:'bg-contact-sec',sectionId:'contact',    builder:sceneContact},
+  ];
+
+  const built={};
+
+  const obs=new IntersectionObserver(entries=>{
+    entries.forEach(entry=>{
+      const id=entry.target.id;
+      const cfg=sectionScenes.find(s=>s.sectionId===id);
+      if(!cfg)return;
+      const canvas=document.getElementById(cfg.canvasId);
+      if(!canvas)return;
+      if(entry.isIntersecting){
+        canvas.classList.add('active');
+        if(!built[id]){
+          built[id]=cfg.builder(canvas);
+        }
+        if(built[id])built[id].start();
+      } else {
+        canvas.classList.remove('active');
+        if(built[id])built[id].stop();
+      }
+    });
+  },{threshold:.08});
+
+  sectionScenes.forEach(cfg=>{
+    const sec=document.getElementById(cfg.sectionId);
+    if(sec)obs.observe(sec);
+  });
+
+  /* also update grid overlay color per section */
+  const gridOverlay=document.getElementById('grid-overlay');
+  const gridColors={
+    'about':'rgba(0,245,196,0.025)',
+    'projects':'rgba(123,97,255,0.025)',
+    'warmap':'rgba(192,57,43,0.025)',
+    'conflicts':'rgba(230,126,34,0.022)',
+    'stack':'rgba(0,245,196,0.022)',
+    'contact':'rgba(255,61,107,0.025)',
+  };
+  const secColorObs=new IntersectionObserver(entries=>{
+    entries.forEach(entry=>{
+      if(entry.isIntersecting&&gridOverlay){
+        const id=entry.target.id;
+        const c=gridColors[id]||'rgba(0,245,196,0.025)';
+        gridOverlay.style.backgroundImage=
+          `linear-gradient(${c} 1px,transparent 1px),linear-gradient(90deg,${c} 1px,transparent 1px)`;
+      }
+    });
+  },{threshold:.3});
+  ['about','projects','warmap','conflicts','stack','contact'].forEach(id=>{
+    const s=document.getElementById(id);if(s)secColorObs.observe(s);
+  });
+
+})();
+
+</script>
+</body>
+</html>
